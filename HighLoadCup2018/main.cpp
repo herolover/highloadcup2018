@@ -1,4 +1,4 @@
-//#include <boost/asio.hpp>
+﻿//#include <boost/asio.hpp>
 #include <boost/multi_index_container.hpp>
 
 #include <rapidjson/document.h>
@@ -9,40 +9,15 @@
 #include <string>
 #include <cstdio>
 #include <map>
+#include <vector>
 #include <iostream>
+#include <locale>
+#include <codecvt>
 
 namespace mi = boost::multi_index;
 namespace rj = rapidjson;
 
-struct Like
-{
-    uint32_t id;
-    uint32_t ts;
-};
-
-struct Account
-{
-    uint32_t id;
-    std::wstring email;
-    std::wstring first_name;
-    std::wstring second_name;
-    std::wstring phone;
-    std::wstring sex;
-    uint32_t birth;
-    std::wstring country;
-    std::wstring city;
-    uint32_t joined;
-    std::wstring status;
-    std::vector<std::wstring> interests;
-    uint32_t premium_start;
-    uint32_t premium_finish;
-    std::vector<Like> likes;
-
-    bool operator<(const Account &a) const
-    {
-        return id < a.id;
-    }
-};
+#include "Account.h"
 
 struct AccountReaderHandler: public rj::BaseReaderHandler<rj::UTF16<>, AccountReaderHandler>
 {
@@ -73,6 +48,7 @@ struct AccountReaderHandler: public rj::BaseReaderHandler<rj::UTF16<>, AccountRe
     State state = State::KEY;
     Account account;
     std::vector<Account> accounts;
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convertor;
 
     bool String(const wchar_t *value, rj::SizeType length, bool)
     {
@@ -122,7 +98,7 @@ struct AccountReaderHandler: public rj::BaseReaderHandler<rj::UTF16<>, AccountRe
         }
         break;
         case State::EMAIL:
-            account.email = value;
+            account.email = convertor.to_bytes(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
@@ -138,7 +114,7 @@ struct AccountReaderHandler: public rj::BaseReaderHandler<rj::UTF16<>, AccountRe
             state = State::ACCOUNT_KEY;
             break;
         case State::SEX:
-            account.sex = value;
+            account.is_male = is_male(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:
@@ -150,7 +126,7 @@ struct AccountReaderHandler: public rj::BaseReaderHandler<rj::UTF16<>, AccountRe
             state = State::ACCOUNT_KEY;
             break;
         case State::STATUS:
-            account.status = value;
+            account.status = convert_account_status(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
@@ -293,7 +269,7 @@ int main()
     {
         rj::Document json;
         rj::GenericReader<rj::UTF8<>, rj::UTF16<>> reader;
-        std::FILE *fp = std::fopen("accounts_3.json", "r");
+        std::FILE *fp = std::fopen("accounts_1.json", "r");
         char buffer[1024];
         rj::FileReadStream file_stream(fp, buffer, 1024);
         reader.Parse(file_stream, reader_handler);
