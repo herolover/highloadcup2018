@@ -20,19 +20,19 @@ struct Account
 
     uint32_t id;
     std::string email;
-    std::wstring first_name;
-    std::wstring second_name;
+    int8_t first_name_id = -1;
+    int16_t second_name_id = -1;
     std::wstring phone;
     bool is_male;
     uint32_t birth;
-    std::wstring country;
-    std::wstring city;
+    int8_t country_id = -1;
+    int16_t city_id = -1;
     uint32_t joined;
     Status status;
-    std::vector<std::wstring> interests;
+    std::vector<uint8_t> interest_id;
     uint32_t premium_start;
     uint32_t premium_finish;
-    std::vector<Like> likes;
+    std::vector<Like> like;
 
     bool operator<(const Account &a) const
     {

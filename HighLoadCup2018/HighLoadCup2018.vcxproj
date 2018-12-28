@@ -130,7 +130,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
-    <ClInclude Include="AccountLoader.h" />
+    <ClInclude Include="DB.h" />
+    <ClInclude Include="DBLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

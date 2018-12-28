@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Account.h"
+#include "DB.h"
 
 #include <rapidjson/reader.h>
 #include <rapidjson/encodings.h>
@@ -12,7 +13,7 @@
 
 namespace rj = rapidjson;
 
-class AccountLoader: public rj::BaseReaderHandler<rj::UTF16<>, AccountLoader>
+class DBLoader: public rj::BaseReaderHandler<rj::UTF16<>, DBLoader>
 {
 public:
     enum class State
@@ -39,8 +40,8 @@ public:
         LIKE_TS = 19
     };
 
-    AccountLoader(const std::function<void(Account &&)> &on_account)
-        : _on_account(on_account)
+    DBLoader(DB &db)
+        : _db(db)
     {
     }
 
@@ -96,11 +97,11 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
-            account.first_name = value;
+            account.first_name_id = _db.get_first_name_id(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::SECOND_NAME:
-            account.second_name = value;
+            account.second_name_id = _db.get_second_name_id(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::PHONE:
@@ -112,11 +113,11 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:
-            account.country = value;
+            account.country_id = _db.get_country_id(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::CITY:
-            account.city = value;
+            account.city_id = _db.get_city_id(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::STATUS:
@@ -124,7 +125,7 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interests.push_back(value);
+            account.interest_id.push_back(_db.get_interest_id(value));
             break;
         case State::PREMIUM_KEY:
         {
@@ -196,11 +197,11 @@ public:
             state = State::PREMIUM_KEY;
             break;
         case State::LIKE_ID:
-            account.likes.back().id = value;
+            account.like.back().id = value;
             state = State::LIKE_KEY;
             break;
         case State::LIKE_TS:
-            account.likes.back().ts = value;
+            account.like.back().ts = value;
             state = State::LIKE_KEY;
             break;
         default:
@@ -214,7 +215,7 @@ public:
     {
         if (state == State::LIKE_KEY)
         {
-            account.likes.emplace_back();
+            account.like.emplace_back();
         }
 
         return true;
@@ -228,7 +229,7 @@ public:
         }
         else if (state == State::ACCOUNT_KEY)
         {
-            _on_account(std::move(account));
+            _db.account.push_back(std::move(account));
             account = {};
         }
 
@@ -254,5 +255,5 @@ private:
     Account account;
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convertor;
 
-    std::function<void(Account &&)> _on_account;
+    DB &_db;
 };

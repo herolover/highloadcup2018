@@ -1,5 +1,6 @@
 ﻿//#include <boost/asio.hpp>
 #include <boost/multi_index_container.hpp>
+#include <boost/bimap.hpp>
 
 #include <string>
 #include <cstdio>
@@ -12,7 +13,10 @@
 //namespace mi = boost::multi_index;
 
 #include "Account.h"
-#include "AccountLoader.h"
+#include "DBLoader.h"
+#include "DB.h"
+
+#include "PerformanceTimer.h"
 
 int main()
 {
@@ -23,11 +27,11 @@ int main()
     //            mi::identity<Account>>>> account_list;
     // *INDENT-ON*
 
-    std::vector<Account> accounts;
-    AccountLoader reader_handler([&](Account &&account)
-    {
-        accounts.push_back(std::move(account));
-    });
+    DB db;
+
+    DBLoader db_loader(db);
+
+    PerformanceTimer timer;
 
     for (int i = 1; i <= 3; ++i)
     {
@@ -37,11 +41,16 @@ int main()
         std::FILE *fp = std::fopen(filename.c_str(), "r");
         char buffer[1024];
         rj::FileReadStream file_stream(fp, buffer, 1024);
-        reader.Parse(file_stream, reader_handler);
+        reader.Parse(file_stream, db_loader);
         std::fclose(fp);
     }
 
-    std::cout << "Finished: " << accounts.size() << std::endl;
+    std::cout << "Finished: " << db.account.size() << " " << timer.elapsed_seconds() * 1000 << std::endl;
+    std::cout << "first name size: " << db.first_name_size() << std::endl;
+    std::cout << "second name size: " << db.second_name_size() << std::endl;
+    std::cout << "country size: " << db.country_size() << std::endl;
+    std::cout << "city size: " << db.city_size() << std::endl;
+    std::cout << "interest size: " << db.interest_size() << std::endl;
 
     return 0;
 }
