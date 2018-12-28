@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\Traits">
+    <Filter Include="Header Files\FieldQuery">
       <UniqueIdentifier>{ec510c01-93d2-4819-85fc-9f3e592a1aff}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -35,11 +35,26 @@
     <ClInclude Include="DBLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FieldTrait.h">
+    <ClInclude Include="FieldQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Traits\FirstName.h">
-      <Filter>Header Files\Traits</Filter>
+    <ClInclude Include="FieldQuery\FirstName.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldQuery\Sex.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldQuery\Email.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldQuery\Status.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="Split.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnyIter.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

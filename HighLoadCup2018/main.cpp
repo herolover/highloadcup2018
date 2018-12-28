@@ -1,7 +1,13 @@
 ﻿#include "Account.h"
 #include "DBLoader.h"
 #include "DB.h"
-#include "Traits/FirstName.h"
+
+#include "FieldQuery/Sex.h"
+#include "FieldQuery/Email.h"
+#include "FieldQuery/Status.h"
+#include "FieldQuery/FirstName.h"
+
+#include "Split.h"
 
 #include "PerformanceTimer.h"
 
@@ -22,7 +28,7 @@ int main()
 
     PerformanceTimer timer;
 
-    for (int i = 1; i <= 3; ++i)
+    for (int i = 1; i <= 1; ++i)
     {
         std::string filename = "accounts_" + std::to_string(i) + ".json";
 
@@ -42,9 +48,14 @@ int main()
     std::cout << "interest size: " << db.interest_size() << std::endl;
 
     timer.reset();
-    auto range = GetTrait<AccountField::FIRST_NAME>::eq(db, L"Егор");
 
-    std::cout << "Count: " << std::distance(range.first, range.second) << " " << timer.elapsed_seconds() * 1000 << std::endl;
+    auto range = FieldQuery<DB::status_tag>::neq(db, L"заняты");
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        std::cout << it->id << ", ";
+    }
+
+    std::cout << "Count: " << " " << timer.elapsed_seconds() * 1000 << std::endl;
 
     return 0;
 }

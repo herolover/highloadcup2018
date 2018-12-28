@@ -13,6 +13,27 @@
 
 namespace rj = rapidjson;
 
+bool is_male(const wchar_t *value)
+{
+    return value[0] == L'm';
+}
+
+Account::Status convert_account_status(const wchar_t *value)
+{
+    if (std::wcscmp(value, L"свободны") == 0)
+    {
+        return Account::Status::FREE;
+    }
+    else if (std::wcscmp(value, L"заняты") == 0)
+    {
+        return Account::Status::BUSY;
+    }
+    else
+    {
+        return Account::Status::COMPLICATED;
+    }
+}
+
 class DBLoader: public rj::BaseReaderHandler<rj::UTF16<>, DBLoader>
 {
 public:
@@ -94,18 +115,19 @@ public:
         break;
         case State::EMAIL:
             account.email = convertor.to_bytes(value);
+            account.email_domain = account.email.substr(account.email.find('@') + 1);
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
-            account.first_name_id = _db.get_first_name_id(value);
+            account.first_name_id = _db.get_first_name_id(std::wstring_view(value, length));
             state = State::ACCOUNT_KEY;
             break;
         case State::SECOND_NAME:
-            account.second_name_id = _db.get_second_name_id(value);
+            account.second_name_id = _db.get_second_name_id(std::wstring_view(value, length));
             state = State::ACCOUNT_KEY;
             break;
         case State::PHONE:
-            account.phone = value;
+            account.phone = convertor.to_bytes(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::SEX:
@@ -113,11 +135,11 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:
-            account.country_id = _db.get_country_id(value);
+            account.country_id = _db.get_country_id(std::wstring_view(value, length));
             state = State::ACCOUNT_KEY;
             break;
         case State::CITY:
-            account.city_id = _db.get_city_id(value);
+            account.city_id = _db.get_city_id(std::wstring_view(value, length));
             state = State::ACCOUNT_KEY;
             break;
         case State::STATUS:
@@ -125,7 +147,7 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interest_id.push_back(_db.get_interest_id(value));
+            account.interest_id.insert(_db.get_interest_id(std::wstring_view(value, length)));
             break;
         case State::PREMIUM_KEY:
         {

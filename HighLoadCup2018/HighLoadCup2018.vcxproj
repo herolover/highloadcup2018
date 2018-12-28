@@ -130,10 +130,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
+    <ClInclude Include="AnyIter.h" />
     <ClInclude Include="DB.h" />
     <ClInclude Include="DBLoader.h" />
-    <ClInclude Include="FieldTrait.h" />
-    <ClInclude Include="Traits\FirstName.h" />
+    <ClInclude Include="FieldQuery.h" />
+    <ClInclude Include="FieldQuery\Email.h" />
+    <ClInclude Include="FieldQuery\FirstName.h" />
+    <ClInclude Include="FieldQuery\Sex.h" />
+    <ClInclude Include="FieldQuery\Status.h" />
+    <ClInclude Include="Split.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
