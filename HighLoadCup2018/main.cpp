@@ -1,32 +1,21 @@
-﻿//#include <boost/asio.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/bimap.hpp>
+﻿#include "Account.h"
+#include "DBLoader.h"
+#include "DB.h"
+#include "Traits/FirstName.h"
+
+#include "PerformanceTimer.h"
 
 #include <string>
 #include <cstdio>
 #include <map>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include <rapidjson/filereadstream.h>
 
-//namespace mi = boost::multi_index;
-
-#include "Account.h"
-#include "DBLoader.h"
-#include "DB.h"
-
-#include "PerformanceTimer.h"
-
 int main()
 {
-    // *INDENT-OFF*
-    //mi::multi_index_container<Account,
-    //    mi::indexed_by<
-    //        mi::ordered_unique<
-    //            mi::identity<Account>>>> account_list;
-    // *INDENT-ON*
-
     DB db;
 
     DBLoader db_loader(db);
@@ -51,6 +40,11 @@ int main()
     std::cout << "country size: " << db.country_size() << std::endl;
     std::cout << "city size: " << db.city_size() << std::endl;
     std::cout << "interest size: " << db.interest_size() << std::endl;
+
+    timer.reset();
+    auto range = GetTrait<AccountField::FIRST_NAME>::eq(db, L"Егор");
+
+    std::cout << "Count: " << std::distance(range.first, range.second) << " " << timer.elapsed_seconds() * 1000 << std::endl;
 
     return 0;
 }

@@ -132,6 +132,8 @@
     <ClInclude Include="Account.h" />
     <ClInclude Include="DB.h" />
     <ClInclude Include="DBLoader.h" />
+    <ClInclude Include="FieldTrait.h" />
+    <ClInclude Include="Traits\FirstName.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

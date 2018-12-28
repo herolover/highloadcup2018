@@ -3,25 +3,42 @@
 #include "Account.h"
 
 #include <boost/bimap.hpp>
+#include <boost/multi_index_container.hpp>
+
+namespace mi = boost::multi_index;
 
 class DB
 {
 public:
-    std::vector<Account> account;
+    struct first_name_tag
+    {
+    };
+
+    // *INDENT-OFF*
+    mi::multi_index_container<Account,
+        mi::indexed_by<
+            mi::ordered_unique<mi::identity<Account>>,
+            mi::ordered_non_unique<
+                mi::tag<first_name_tag>,
+                mi::member<Account, int8_t, &Account::first_name_id>
+            >
+        >
+    > account;
+    // *INDENT-ON*
 
 #define DEFINE_ENTITY(entity, id_type) \
 public: \
     ##id_type get_##entity##_id(const std::wstring &value) \
     { \
-        auto it = _##entity.left.find(value); \
-        if (it != _##entity.left.end()) \
+        auto it = ##entity.left.find(value); \
+        if (it != ##entity.left.end()) \
         { \
             return it->second; \
         } \
         else \
         { \
-            ##id_type id = static_cast<##id_type>(_##entity.size()); \
-            _##entity.insert({value, id}); \
+            ##id_type id = static_cast<##id_type>(##entity.size()); \
+            ##entity.insert({value, id}); \
 \
             return id; \
         } \
@@ -29,10 +46,10 @@ public: \
 \
     auto entity##_size() const \
     { \
-        return _##entity##.size(); \
+        return entity##.size(); \
     } \
-private: \
-    boost::bimap<std::wstring, ##id_type> _##entity
+\
+    boost::bimap<std::wstring, ##id_type> ##entity
 
     DEFINE_ENTITY(first_name, int8_t);
     DEFINE_ENTITY(second_name, int16_t);

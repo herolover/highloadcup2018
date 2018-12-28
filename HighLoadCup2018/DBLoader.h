@@ -229,7 +229,7 @@ public:
         }
         else if (state == State::ACCOUNT_KEY)
         {
-            _db.account.push_back(std::move(account));
+            _db.account.insert(std::move(account));
             account = {};
         }
 

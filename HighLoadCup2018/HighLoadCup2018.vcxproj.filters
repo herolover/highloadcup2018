@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Traits">
+      <UniqueIdentifier>{ec510c01-93d2-4819-85fc-9f3e592a1aff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -31,6 +34,12 @@
     </ClInclude>
     <ClInclude Include="DBLoader.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldTrait.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Traits\FirstName.h">
+      <Filter>Header Files\Traits</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
