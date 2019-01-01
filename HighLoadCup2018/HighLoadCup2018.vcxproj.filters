@@ -68,5 +68,8 @@
     <ClInclude Include="FieldQuery\Country.h">
       <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
+    <ClInclude Include="FieldQuery\City.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
