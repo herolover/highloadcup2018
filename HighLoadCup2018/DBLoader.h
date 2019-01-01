@@ -130,6 +130,7 @@ public:
             break;
         case State::PHONE:
             account.phone = value;
+            account.phone_code = account.phone.substr(account.phone.find('(') + 1, 3);
             state = State::ACCOUNT_KEY;
             break;
         case State::SEX:

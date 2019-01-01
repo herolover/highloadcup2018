@@ -33,6 +33,7 @@ struct Account
     first_name_t first_name;
     second_name_t second_name;
     std::string phone;
+    std::string phone_code;
     bool is_male;
     uint32_t birth;
     country_t country;

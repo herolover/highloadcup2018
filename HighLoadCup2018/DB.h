@@ -21,6 +21,7 @@ public:
     struct first_name_tag {};
     struct second_name_tag {};
     struct phone_tag {};
+    struct phone_code_tag {};
     struct sex_tag {};
     struct birth_tag {};
     struct country_tag {};
@@ -58,6 +59,11 @@ public:
             mi::ordered_non_unique<
                 mi::tag<phone_tag>,
                 mi::member<Account, std::string, &Account::phone>,
+                string_view_compare
+            >,
+            mi::ordered_non_unique<
+                mi::tag<phone_code_tag>,
+                mi::member<Account, std::string, &Account::phone_code>,
                 string_view_compare
             >,
             mi::ordered_non_unique<
