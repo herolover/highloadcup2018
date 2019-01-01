@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "Account.h"
 #include "DB.h"
@@ -13,18 +13,18 @@
 
 namespace rj = rapidjson;
 
-bool is_male(const wchar_t *value)
+bool is_male(const std::string_view &value)
 {
-    return value[0] == L'm';
+    return value[0] == 'm';
 }
 
-Account::Status convert_account_status(const wchar_t *value)
+Account::Status convert_account_status(const std::string_view &value)
 {
-    if (std::wcscmp(value, L"свободны") == 0)
+    if (value == u8"СЃРІРѕР±РѕРґРЅС‹")
     {
         return Account::Status::FREE;
     }
-    else if (std::wcscmp(value, L"заняты") == 0)
+    else if (value == u8"Р·Р°РЅСЏС‚С‹")
     {
         return Account::Status::BUSY;
     }
@@ -34,7 +34,7 @@ Account::Status convert_account_status(const wchar_t *value)
     }
 }
 
-class DBLoader: public rj::BaseReaderHandler<rj::UTF16<>, DBLoader>
+class DBLoader: public rj::BaseReaderHandler<rj::UTF8<>, DBLoader>
 {
 public:
     enum class State
@@ -66,13 +66,15 @@ public:
     {
     }
 
-    bool String(const wchar_t *value, rj::SizeType length, bool)
+    bool String(const char *raw_value, rj::SizeType length, bool)
     {
+        std::string_view value(raw_value, length);
+
         switch (state)
         {
         case State::KEY:
         {
-            if (std::wcscmp(value, L"accounts") == 0)
+            if (value == "accounts")
             {
                 state = State::ACCOUNT_KEY;
             }
@@ -84,22 +86,22 @@ public:
         break;
         case State::ACCOUNT_KEY:
         {
-            const static std::map<std::wstring, State> key_list =
+            const static std::map<std::string_view, State> key_list =
             {
-                {L"id", State::ID},
-                {L"email", State::EMAIL},
-                {L"fname", State::FIRST_NAME},
-                {L"sname", State::SECOND_NAME},
-                {L"phone", State::PHONE},
-                {L"sex", State::SEX},
-                {L"birth", State::BIRTH},
-                {L"country", State::COUNTRY},
-                {L"city", State::CITY},
-                {L"joined", State::JOINED},
-                {L"status", State::STATUS},
-                {L"interests", State::INTEREST},
-                {L"premium", State::PREMIUM_KEY},
-                {L"likes", State::LIKE_KEY},
+                {"id", State::ID},
+                {"email", State::EMAIL},
+                {"fname", State::FIRST_NAME},
+                {"sname", State::SECOND_NAME},
+                {"phone", State::PHONE},
+                {"sex", State::SEX},
+                {"birth", State::BIRTH},
+                {"country", State::COUNTRY},
+                {"city", State::CITY},
+                {"joined", State::JOINED},
+                {"status", State::STATUS},
+                {"interests", State::INTEREST},
+                {"premium", State::PREMIUM_KEY},
+                {"likes", State::LIKE_KEY},
             };
 
             auto key_list_it = key_list.find(value);
@@ -114,20 +116,20 @@ public:
         }
         break;
         case State::EMAIL:
-            account.email = convertor.to_bytes(value);
+            account.email = value;
             account.email_domain = account.email.substr(account.email.find('@') + 1);
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
-            account.first_name_id = _db.get_first_name_id(std::wstring_view(value, length));
+            account.first_name = value;
             state = State::ACCOUNT_KEY;
             break;
         case State::SECOND_NAME:
-            account.second_name_id = _db.get_second_name_id(std::wstring_view(value, length));
+            account.second_name = value;
             state = State::ACCOUNT_KEY;
             break;
         case State::PHONE:
-            account.phone = convertor.to_bytes(value);
+            account.phone = value;
             state = State::ACCOUNT_KEY;
             break;
         case State::SEX:
@@ -135,11 +137,11 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:
-            account.country_id = _db.get_country_id(std::wstring_view(value, length));
+            account.country = value;
             state = State::ACCOUNT_KEY;
             break;
         case State::CITY:
-            account.city_id = _db.get_city_id(std::wstring_view(value, length));
+            account.city = value;
             state = State::ACCOUNT_KEY;
             break;
         case State::STATUS:
@@ -147,14 +149,14 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interest_id.insert(_db.get_interest_id(std::wstring_view(value, length)));
+            account.interest.emplace(value);
             break;
         case State::PREMIUM_KEY:
         {
-            const static std::map<std::wstring, State> key_list =
+            const static std::map<std::string_view, State> key_list =
             {
-                {L"start", State::PREMIUM_START},
-                {L"finish", State::PREMIUM_FINISH},
+                {"start", State::PREMIUM_START},
+                {"finish", State::PREMIUM_FINISH},
             };
 
             auto key_list_it = key_list.find(value);
@@ -170,10 +172,10 @@ public:
         break;
         case State::LIKE_KEY:
         {
-            const static std::map<std::wstring, State> key_list =
+            const static std::map<std::string_view, State> key_list =
             {
-                {L"id", State::LIKE_ID},
-                {L"ts", State::LIKE_TS},
+                {"id", State::LIKE_ID},
+                {"ts", State::LIKE_TS},
             };
 
             auto key_list_it = key_list.find(value);
@@ -275,7 +277,6 @@ public:
 private:
     State state = State::KEY;
     Account account;
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convertor;
 
     DB &_db;
 };

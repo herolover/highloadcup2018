@@ -53,7 +53,13 @@
     <ClInclude Include="Split.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AnyIter.h">
+    <ClInclude Include="FieldQuery\SecondName.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="HandlerIter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SharedString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

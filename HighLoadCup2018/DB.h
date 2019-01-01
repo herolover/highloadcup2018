@@ -2,8 +2,13 @@
 
 #include "Account.h"
 
-#include <boost/bimap.hpp>
 #include <boost/multi_index_container.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/indexed_by.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+
+#include <set>
 
 namespace mi = boost::multi_index;
 
@@ -28,11 +33,13 @@ public:
             mi::ordered_unique<mi::identity<Account>>,
             mi::ordered_unique<
                 mi::tag<email_tag>,
-                mi::member<Account, std::string, &Account::email>
+                mi::member<Account, std::string, &Account::email>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<email_domain_tag>,
-                mi::member<Account, std::string, &Account::email_domain>
+                mi::member<Account, std::string, &Account::email_domain>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<status_tag>,
@@ -40,15 +47,18 @@ public:
             >,
             mi::ordered_non_unique<
                 mi::tag<first_name_tag>,
-                mi::member<Account, int8_t, &Account::first_name_id>
+                mi::member<Account, Account::first_name_t, &Account::first_name>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<second_name_tag>,
-                mi::member<Account, int16_t, &Account::second_name_id>
+                mi::member<Account, Account::second_name_t, &Account::second_name>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<phone_tag>,
-                mi::member<Account, std::string, &Account::phone>
+                mi::member<Account, std::string, &Account::phone>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<sex_tag>,
@@ -60,11 +70,13 @@ public:
             >,
             mi::ordered_non_unique<
                 mi::tag<country_tag>,
-                mi::member<Account, int8_t, &Account::country_id>
+                mi::member<Account, Account::country_t, &Account::country>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<city_tag>,
-                mi::member<Account, int16_t, &Account::city_id>
+                mi::member<Account, Account::city_t, &Account::city>,
+                string_view_compare
             >,
             mi::ordered_non_unique<
                 mi::tag<joined_tag>,
@@ -73,37 +85,4 @@ public:
         >
     > account;
     // *INDENT-ON*
-
-#define DEFINE_ENTITY(entity, id_type) \
-public: \
-    template<class CharType> \
-    ##id_type get_##entity##_id(std::basic_string_view<CharType> value) \
-    { \
-        auto it = ##entity.left.find(std::wstring(value)); \
-        if (it != ##entity.left.end()) \
-        { \
-            return it->second; \
-        } \
-        else \
-        { \
-            ##id_type id = static_cast<##id_type>(##entity.size()); \
-            ##entity.insert({std::wstring(value), id}); \
-\
-            return id; \
-        } \
-    } \
-\
-    auto entity##_size() const \
-    { \
-        return entity##.size(); \
-    } \
-\
-    boost::bimap<std::wstring, ##id_type> ##entity
-
-    DEFINE_ENTITY(first_name, int8_t);
-    DEFINE_ENTITY(second_name, int16_t);
-    DEFINE_ENTITY(country, int8_t);
-    DEFINE_ENTITY(city, int16_t);
-    DEFINE_ENTITY(interest, uint8_t);
-#undef DEFINE_ENTITY
 };

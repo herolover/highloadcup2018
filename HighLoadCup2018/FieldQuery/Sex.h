@@ -5,9 +5,9 @@
 template<>
 struct FieldQuery<DB::sex_tag>
 {
-    static auto eq(DB &db, const std::string &value)
+    static auto eq(DB &db, const std::string_view &value)
     {
         auto &index = db.account.get<DB::sex_tag>();
-        return index.equal_range(value[0] == 'm');
+        return index.equal_range(value[0] == L'm');
     }
 };

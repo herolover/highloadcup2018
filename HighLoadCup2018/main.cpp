@@ -7,8 +7,6 @@
 #include "FieldQuery/Status.h"
 #include "FieldQuery/FirstName.h"
 
-#include "Split.h"
-
 #include "PerformanceTimer.h"
 
 #include <string>
@@ -28,11 +26,11 @@ int main()
 
     PerformanceTimer timer;
 
-    for (int i = 1; i <= 1; ++i)
+    for (int i = 1; i <= 3; ++i)
     {
         std::string filename = "accounts_" + std::to_string(i) + ".json";
 
-        rj::GenericReader<rj::UTF8<>, rj::UTF16<>> reader;
+        rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
         std::FILE *fp = std::fopen(filename.c_str(), "r");
         char buffer[1024];
         rj::FileReadStream file_stream(fp, buffer, 1024);
@@ -41,21 +39,21 @@ int main()
     }
 
     std::cout << "Finished: " << db.account.size() << " " << timer.elapsed_seconds() * 1000 << std::endl;
-    std::cout << "first name size: " << db.first_name_size() << std::endl;
-    std::cout << "second name size: " << db.second_name_size() << std::endl;
-    std::cout << "country size: " << db.country_size() << std::endl;
-    std::cout << "city size: " << db.city_size() << std::endl;
-    std::cout << "interest size: " << db.interest_size() << std::endl;
+    std::cout << "first name size: " << Account::first_name_t::size() << std::endl;
+    std::cout << "second name size: " << Account::second_name_t::size() << std::endl;
+    std::cout << "country size: " << Account::country_t::size() << std::endl;
+    std::cout << "city size: " << Account::city_t::size() << std::endl;
+    std::cout << "interest size: " << Account::interest_t::size() << std::endl;
 
     timer.reset();
 
-    auto range = FieldQuery<DB::status_tag>::neq(db, L"заняты");
+    auto range = FieldQuery<DB::first_name_tag>::any(db, u8"Иван");
     for (auto it = range.first; it != range.second; ++it)
     {
-        std::cout << it->id << ", ";
+        std::cout << it->id << " " << *it->first_name << ", ";
     }
 
-    std::cout << "Count: " << " " << timer.elapsed_seconds() * 1000 << std::endl;
+    std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
 
     return 0;
 }
