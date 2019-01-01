@@ -48,7 +48,7 @@ struct FieldQuery<DB::first_name_tag>
     static auto null(DB &db, const std::string_view &value)
     {
         auto &index = db.account.get<DB::first_name_tag>();
-        if (value[0] == L'0')
+        if (value[0] == '0')
         {
             return std::make_pair(index.upper_bound(nullptr), index.end());
         }

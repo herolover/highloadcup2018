@@ -30,4 +30,17 @@ struct FieldQuery<DB::second_name_tag>
             }
         }), end_it);
     }
+
+    static auto null(DB &db, const std::string_view &value)
+    {
+        auto &index = db.account.get<DB::second_name_tag>();
+        if (value[0] == '0')
+        {
+            return std::make_pair(index.upper_bound(nullptr), index.end());
+        }
+        else
+        {
+            return index.equal_range(nullptr);
+        }
+    }
 };

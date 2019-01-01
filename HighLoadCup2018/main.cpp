@@ -48,10 +48,10 @@ int main()
 
     timer.reset();
 
-    auto range = FieldQuery<DB::second_name_tag>::starts(db, u8"Хопу");
+    auto range = FieldQuery<DB::first_name_tag>::null(db, u8"1");
     for (auto it = range.first; it != range.second; ++it)
     {
-        std::cout << it->id << " " << *it->second_name << ", ";
+        std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
     }
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;

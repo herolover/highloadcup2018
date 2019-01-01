@@ -27,6 +27,18 @@ struct string_view_compare
     }
 
     template<class T>
+    bool operator()(const T &a, std::nullptr_t) const
+    {
+        return false;
+    }
+
+    template<class T>
+    bool operator()(std::nullptr_t, const T &a) const
+    {
+        return a != nullptr;
+    }
+
+    template<class T>
     bool operator()(const T &a, const std::string_view &b) const
     {
         return !a || *a < b;
@@ -95,6 +107,11 @@ public:
     const std::string *operator->() const
     {
         return _value.get();
+    }
+
+    bool operator!=(nullptr_t) const
+    {
+        return _value != nullptr;
     }
 
     static std::size_t size()
