@@ -9,7 +9,7 @@
 struct Like
 {
     uint32_t id;
-    uint32_t ts;
+    int32_t ts;
 };
 
 struct Account
@@ -35,14 +35,15 @@ struct Account
     std::string phone;
     std::string phone_code;
     bool is_male;
-    uint32_t birth;
+    int32_t birth;
+    uint16_t birth_year;
     country_t country;
     city_t city;
-    uint32_t joined;
+    int32_t joined;
     Status status;
     std::set<interest_t> interest;
-    uint32_t premium_start;
-    uint32_t premium_finish;
+    int32_t premium_start;
+    int32_t premium_finish;
     std::vector<Like> like;
 
     bool operator<(const Account &a) const

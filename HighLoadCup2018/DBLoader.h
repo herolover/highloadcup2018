@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Account.h"
+#include "Convert.h"
 #include "DB.h"
 
 #include <rapidjson/reader.h>
@@ -12,27 +13,6 @@
 #include <functional>
 
 namespace rj = rapidjson;
-
-bool is_male(const std::string_view &value)
-{
-    return value[0] == 'm';
-}
-
-Account::Status convert_account_status(const std::string_view &value)
-{
-    if (value == u8"свободны")
-    {
-        return Account::Status::FREE;
-    }
-    else if (value == u8"заняты")
-    {
-        return Account::Status::BUSY;
-    }
-    else
-    {
-        return Account::Status::COMPLICATED;
-    }
-}
 
 class DBLoader: public rj::BaseReaderHandler<rj::UTF8<>, DBLoader>
 {
@@ -197,6 +177,22 @@ public:
         return true;
     }
 
+    bool Int(int32_t value)
+    {
+        switch (state)
+        {
+        case DBLoader::State::BIRTH:
+            account.birth = value;
+            account.birth_year = get_year(value);
+            state = State::ACCOUNT_KEY;
+            break;
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
     bool Uint(uint32_t value)
     {
         switch (state)
@@ -207,6 +203,7 @@ public:
             break;
         case State::BIRTH:
             account.birth = value;
+            account.birth_year = get_year(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::JOINED:

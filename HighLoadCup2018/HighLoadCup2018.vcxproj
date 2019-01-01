@@ -130,9 +130,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
+    <ClInclude Include="FieldQuery\Birth.h" />
     <ClInclude Include="FieldQuery\City.h" />
     <ClInclude Include="FieldQuery\Country.h" />
     <ClInclude Include="FieldQuery\Phone.h" />
+    <ClInclude Include="Convert.h" />
     <ClInclude Include="SharedString.h" />
     <ClInclude Include="HandlerIter.h" />
     <ClInclude Include="FieldQuery\SecondName.h" />

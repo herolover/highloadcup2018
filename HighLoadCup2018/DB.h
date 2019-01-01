@@ -24,6 +24,7 @@ public:
     struct phone_code_tag {};
     struct sex_tag {};
     struct birth_tag {};
+    struct birth_year_tag {};
     struct country_tag {};
     struct city_tag {};
     struct joined_tag {};
@@ -72,7 +73,11 @@ public:
             >,
             mi::ordered_non_unique<
                 mi::tag<birth_tag>,
-                mi::member<Account, uint32_t, &Account::birth>
+                mi::member<Account, int32_t, &Account::birth>
+            >,
+            mi::ordered_non_unique<
+                mi::tag<birth_year_tag>,
+                mi::member<Account, uint16_t, &Account::birth_year>
             >,
             mi::ordered_non_unique<
                 mi::tag<country_tag>,
@@ -86,7 +91,7 @@ public:
             >,
             mi::ordered_non_unique<
                 mi::tag<joined_tag>,
-                mi::member<Account, uint32_t, &Account::joined>
+                mi::member<Account, int32_t, &Account::joined>
             >
         >
     > account;

@@ -71,5 +71,11 @@
     <ClInclude Include="FieldQuery\City.h">
       <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
+    <ClInclude Include="FieldQuery\Birth.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
+    <ClInclude Include="Convert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
