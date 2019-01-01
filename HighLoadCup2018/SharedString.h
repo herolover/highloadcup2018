@@ -92,6 +92,11 @@ public:
         return *_value;
     }
 
+    const std::string *operator->() const
+    {
+        return _value.get();
+    }
+
     static std::size_t size()
     {
         return _value_storage.size();

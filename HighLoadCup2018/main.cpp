@@ -6,6 +6,7 @@
 #include "FieldQuery/Email.h"
 #include "FieldQuery/Status.h"
 #include "FieldQuery/FirstName.h"
+#include "FieldQuery/SecondName.h"
 
 #include "PerformanceTimer.h"
 
@@ -47,10 +48,10 @@ int main()
 
     timer.reset();
 
-    auto range = FieldQuery<DB::first_name_tag>::any(db, u8"Иван");
+    auto range = FieldQuery<DB::second_name_tag>::starts(db, u8"Хопу");
     for (auto it = range.first; it != range.second; ++it)
     {
-        std::cout << it->id << " " << *it->first_name << ", ";
+        std::cout << it->id << " " << *it->second_name << ", ";
     }
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
