@@ -7,6 +7,7 @@
 #include "FieldQuery/Status.h"
 #include "FieldQuery/FirstName.h"
 #include "FieldQuery/SecondName.h"
+#include "FieldQuery/Phone.h"
 
 #include "PerformanceTimer.h"
 
@@ -48,10 +49,17 @@ int main()
 
     timer.reset();
 
-    auto range = FieldQuery<DB::first_name_tag>::null(db, u8"1");
+    std::set<std::string> phones;
+    auto range = FieldQuery<DB::phone_tag>::null(db, u8"0");
     for (auto it = range.first; it != range.second; ++it)
     {
-        std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
+        std::cout << it->id << " " << (!it->phone.empty() ? it->phone : "null") << ", ";
+        //phones.insert(it->phone);
+    }
+
+    for (auto &phone : phones)
+    {
+        std::cout << phone << std::endl;
     }
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;

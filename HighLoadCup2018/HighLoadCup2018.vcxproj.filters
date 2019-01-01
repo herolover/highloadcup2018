@@ -62,5 +62,8 @@
     <ClInclude Include="SharedString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FieldQuery\Phone.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
