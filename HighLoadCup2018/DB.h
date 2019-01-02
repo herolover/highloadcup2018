@@ -10,6 +10,7 @@
 
 #include <set>
 #include <map>
+#include <algorithm>
 
 namespace mi = boost::multi_index;
 
@@ -31,6 +32,7 @@ struct DB
     struct status_tag {};
     struct premium_tag {};
     struct interest_tag {};
+    struct like_tag {};
 
     // *INDENT-OFF*
     mi::multi_index_container<Account,
@@ -108,6 +110,7 @@ struct DB
     // *INDENT-ON*
 
     std::map<Account::interest_t, std::vector<uint32_t>, string_view_compare> interest;
+    std::map<uint32_t, std::vector<uint32_t>> liked_by;
 
     void add_account(Account &&new_account)
     {
@@ -123,6 +126,17 @@ struct DB
             {
                 interest[account_interest].push_back(account.id);
             }
+
+            for (auto &like : account.like)
+            {
+                liked_by[like].push_back(account.id);
+            }
+        }
+
+        for (auto &account : liked_by)
+        {
+            std::sort(account.second.begin(), account.second.end());
+            account.second.erase(std::unique(account.second.begin(), account.second.end()), account.second.end());
         }
     }
 };

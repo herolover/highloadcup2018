@@ -83,5 +83,8 @@
     <ClInclude Include="FieldQuery\Interest.h">
       <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
+    <ClInclude Include="FieldQuery\Like.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

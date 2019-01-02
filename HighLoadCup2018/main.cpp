@@ -13,6 +13,7 @@
 #include "FieldQuery/Birth.h"
 #include "FieldQuery/Premium.h"
 #include "FieldQuery/Interest.h"
+#include "FieldQuery/Like.h"
 
 #include "PerformanceTimer.h"
 
@@ -57,7 +58,7 @@ int main()
     std::cout << "interest size: " << Account::interest_t::size() << std::endl;
 
     auto now_time = std::time(nullptr);
-    auto range = FieldQuery<DB::interest_tag>::contains(db, u8"Симпсоны,Поцелуи");
+    auto range = FieldQuery<DB::like_tag>::contains(db, u8"401");
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
 
