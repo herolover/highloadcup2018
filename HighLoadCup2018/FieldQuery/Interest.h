@@ -10,7 +10,7 @@ struct FieldQuery<DB::interest_tag>
     static auto contains(DB &db, const std::string_view &value)
     {
         bool is_inited = false;
-        std::set<uint32_t> result_id_list;
+        std::vector<uint32_t> result_id_list;
 
         for (auto &interest : split(value))
         {
@@ -22,17 +22,10 @@ struct FieldQuery<DB::interest_tag>
             }
             else
             {
-                for (auto it = result_id_list.begin(); it != result_id_list.end();)
+                result_id_list.erase(std::remove_if(result_id_list.begin(), result_id_list.end(), [&](uint32_t id)
                 {
-                    if (id_list.find(*it) == id_list.end())
-                    {
-                        it = result_id_list.erase(it);
-                    }
-                    else
-                    {
-                        ++it;
-                    }
-                }
+                    return std::find(id_list.begin(), id_list.end(), id) == id_list.end();
+                }), result_id_list.end());
             }
         }
 
@@ -41,11 +34,12 @@ struct FieldQuery<DB::interest_tag>
 
     static auto any(DB &db, const std::string_view &value)
     {
-        std::set<uint32_t> result_id_list;
+        std::vector<uint32_t> result_id_list;
 
         for (auto &interest : split(value))
         {
-            result_id_list.merge(db.interest[interest]);
+            auto &id_list = db.interest[interest];
+            result_id_list.insert(result_id_list.end(), id_list.begin(), id_list.end());
         }
 
         return result_id_list;

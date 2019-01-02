@@ -130,7 +130,7 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interest.insert(value);
+            account.interest.push_back(value);
             break;
         case State::PREMIUM_KEY:
         {
@@ -219,11 +219,12 @@ public:
             state = State::PREMIUM_KEY;
             break;
         case State::LIKE_ID:
-            account.like.back().id = value;
+            //account.like.back().id = value;
+            account.like.push_back(value);
             state = State::LIKE_KEY;
             break;
         case State::LIKE_TS:
-            account.like.back().ts = value;
+            //account.like.back().ts = value;
             state = State::LIKE_KEY;
             break;
         default:
@@ -237,7 +238,7 @@ public:
     {
         if (state == State::LIKE_KEY)
         {
-            account.like.emplace_back();
+            //account.like.emplace_back();
         }
 
         return true;
@@ -251,11 +252,7 @@ public:
         }
         else if (state == State::ACCOUNT_KEY)
         {
-            for (auto &interest : account.interest)
-            {
-                _db.interest[interest].insert(account.id);
-            }
-            _db.account.insert(std::move(account));
+            _db.add_account(std::move(account));
             account = {};
         }
 

@@ -15,6 +15,7 @@ namespace mi = boost::multi_index;
 
 struct DB
 {
+    struct id_tag {};
     struct email_tag {};
     struct email_domain_tag {};
     struct first_name_tag {};
@@ -34,7 +35,10 @@ struct DB
     // *INDENT-OFF*
     mi::multi_index_container<Account,
         mi::indexed_by<
-            mi::ordered_unique<mi::identity<Account>>,
+            mi::ordered_unique<
+                mi::tag<id_tag>,
+                mi::identity<Account>
+            >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
                 mi::member<Account, std::string, &Account::email>,
@@ -101,7 +105,24 @@ struct DB
             >
         >
     > account;
-
-    std::map<Account::interest_t, std::set<uint32_t>, string_view_compare> interest;
     // *INDENT-ON*
+
+    std::map<Account::interest_t, std::vector<uint32_t>, string_view_compare> interest;
+
+    void add_account(Account &&new_account)
+    {
+        account.insert(std::move(new_account));
+    }
+
+    void build_indicies()
+    {
+        auto &index = account.get<id_tag>();
+        for (auto &account : index)
+        {
+            for (auto &account_interest : account.interest)
+            {
+                interest[account_interest].push_back(account.id);
+            }
+        }
+    }
 };

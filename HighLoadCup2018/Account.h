@@ -20,7 +20,7 @@ struct Account
     using city_t = typename shared_string<3>;
     using interest_t = typename shared_string<4>;
 
-    enum class Status
+    enum class Status : uint8_t
     {
         FREE = 0,
         BUSY = 1,
@@ -41,10 +41,10 @@ struct Account
     city_t city;
     int32_t joined;
     Status status;
-    std::set<interest_t, string_view_compare> interest;
+    std::vector<interest_t> interest;
     int32_t premium_start = 0;
     int32_t premium_finish = 0;
-    std::vector<Like> like;
+    std::vector<uint32_t> like;
 
     bool operator<(const Account &a) const
     {

@@ -45,17 +45,19 @@ int main()
         std::fclose(fp);
     }
 
-    std::cout << "Finished: " << db.account.size() << " " << timer.elapsed_seconds() * 1000 << std::endl;
+    std::cout << "Finished: " << db.account.size() << " " << timer.reset() * 1000 << std::endl;
+
+    db.build_indicies();
+
+    std::cout << "Finished: " << db.account.size() << " " << timer.reset() * 1000 << std::endl;
     std::cout << "first name size: " << Account::first_name_t::size() << std::endl;
     std::cout << "second name size: " << Account::second_name_t::size() << std::endl;
     std::cout << "country size: " << Account::country_t::size() << std::endl;
     std::cout << "city size: " << Account::city_t::size() << std::endl;
     std::cout << "interest size: " << Account::interest_t::size() << std::endl;
 
-    timer.reset();
-
     auto now_time = std::time(nullptr);
-    auto range = FieldQuery<DB::interest_tag>::any(db, u8"Симпсоны,Обнимашки");
+    auto range = FieldQuery<DB::interest_tag>::contains(db, u8"Симпсоны,Поцелуи");
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
 
