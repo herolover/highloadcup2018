@@ -11,6 +11,7 @@
 #include "FieldQuery/Country.h"
 #include "FieldQuery/City.h"
 #include "FieldQuery/Birth.h"
+#include "FieldQuery/Premium.h"
 
 #include "PerformanceTimer.h"
 
@@ -52,21 +53,17 @@ int main()
 
     timer.reset();
 
-    std::set<std::string> phones;
-    auto range = FieldQuery<DB::birth_tag>::year(db, u8"1990");
+    auto now_time = std::time(nullptr);
+    auto range = FieldQuery<DB::premium_tag>::now(db, u8"0");
     for (auto it = range.first; it != range.second; ++it)
     {
         //std::cout << it->id << " " << (it->city ? *it->city: "null") << ", ";
         //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
+        std::cout << it->id << " " << it->premium_start << " " << it->premium_finish << ", ";
         //phones.insert(it->phone);
     }
 
-    for (auto &phone : phones)
-    {
-        std::cout << phone << std::endl;
-    }
-
-    std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
+    std::cout << "Count: " << timer.elapsed_seconds() * 1000 << " " << a << " " << b << std::endl;
 
     return 0;
 }

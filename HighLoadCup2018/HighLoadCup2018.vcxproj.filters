@@ -77,5 +77,8 @@
     <ClInclude Include="Convert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FieldQuery\Premium.h">
+      <Filter>Header Files\FieldQuery</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

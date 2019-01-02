@@ -17,7 +17,6 @@ class DB
 public:
     struct email_tag {};
     struct email_domain_tag {};
-    struct status_tag {};
     struct first_name_tag {};
     struct second_name_tag {};
     struct phone_tag {};
@@ -28,6 +27,8 @@ public:
     struct country_tag {};
     struct city_tag {};
     struct joined_tag {};
+    struct status_tag {};
+    struct premium_tag {};
 
     // *INDENT-OFF*
     mi::multi_index_container<Account,
@@ -92,6 +93,10 @@ public:
             mi::ordered_non_unique<
                 mi::tag<joined_tag>,
                 mi::member<Account, int32_t, &Account::joined>
+            >,
+            mi::ordered_non_unique<
+                mi::tag<premium_tag>,
+                mi::member<Account, int32_t, &Account::premium_finish>
             >
         >
     > account;

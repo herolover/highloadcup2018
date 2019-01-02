@@ -42,8 +42,8 @@ struct Account
     int32_t joined;
     Status status;
     std::set<interest_t> interest;
-    int32_t premium_start;
-    int32_t premium_finish;
+    int32_t premium_start = 0;
+    int32_t premium_finish = 0;
     std::vector<Like> like;
 
     bool operator<(const Account &a) const
