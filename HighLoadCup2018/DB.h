@@ -9,12 +9,12 @@
 #include <boost/multi_index/ordered_index.hpp>
 
 #include <set>
+#include <map>
 
 namespace mi = boost::multi_index;
 
-class DB
+struct DB
 {
-public:
     struct email_tag {};
     struct email_domain_tag {};
     struct first_name_tag {};
@@ -29,6 +29,7 @@ public:
     struct joined_tag {};
     struct status_tag {};
     struct premium_tag {};
+    struct interest_tag {};
 
     // *INDENT-OFF*
     mi::multi_index_container<Account,
@@ -100,5 +101,7 @@ public:
             >
         >
     > account;
+
+    std::map<Account::interest_t, std::set<uint32_t>, string_view_compare> interest;
     // *INDENT-ON*
 };

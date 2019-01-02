@@ -12,6 +12,7 @@
 #include "FieldQuery/City.h"
 #include "FieldQuery/Birth.h"
 #include "FieldQuery/Premium.h"
+#include "FieldQuery/Interest.h"
 
 #include "PerformanceTimer.h"
 
@@ -54,16 +55,21 @@ int main()
     timer.reset();
 
     auto now_time = std::time(nullptr);
-    auto range = FieldQuery<DB::premium_tag>::now(db, u8"0");
-    for (auto it = range.first; it != range.second; ++it)
-    {
-        //std::cout << it->id << " " << (it->city ? *it->city: "null") << ", ";
-        //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
-        std::cout << it->id << " " << it->premium_start << " " << it->premium_finish << ", ";
-        //phones.insert(it->phone);
-    }
+    auto range = FieldQuery<DB::interest_tag>::any(db, u8"Симпсоны,Обнимашки");
 
-    std::cout << "Count: " << timer.elapsed_seconds() * 1000 << " " << a << " " << b << std::endl;
+    std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
+
+    for (auto &id : range)
+    {
+        std::cout << id << ", ";
+    }
+    //for (auto it = range.first; it != range.second; ++it)
+    //{
+    //    //std::cout << it->id << " " << (it->city ? *it->city: "null") << ", ";
+    //    //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
+    //    //phones.insert(it->phone);
+    //}
+
 
     return 0;
 }

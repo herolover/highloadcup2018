@@ -130,7 +130,7 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interest.emplace(value);
+            account.interest.insert(value);
             break;
         case State::PREMIUM_KEY:
         {
@@ -251,6 +251,10 @@ public:
         }
         else if (state == State::ACCOUNT_KEY)
         {
+            for (auto &interest : account.interest)
+            {
+                _db.interest[interest].insert(account.id);
+            }
             _db.account.insert(std::move(account));
             account = {};
         }

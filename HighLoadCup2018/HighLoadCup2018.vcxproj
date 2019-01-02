@@ -133,6 +133,7 @@
     <ClInclude Include="FieldQuery\Birth.h" />
     <ClInclude Include="FieldQuery\City.h" />
     <ClInclude Include="FieldQuery\Country.h" />
+    <ClInclude Include="FieldQuery\Interest.h" />
     <ClInclude Include="FieldQuery\Phone.h" />
     <ClInclude Include="Convert.h" />
     <ClInclude Include="FieldQuery\Premium.h" />

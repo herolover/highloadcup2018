@@ -41,7 +41,7 @@ struct Account
     city_t city;
     int32_t joined;
     Status status;
-    std::set<interest_t> interest;
+    std::set<interest_t, string_view_compare> interest;
     int32_t premium_start = 0;
     int32_t premium_finish = 0;
     std::vector<Like> like;
