@@ -44,29 +44,4 @@ struct FieldQuery<DB::interest_tag>
 
         return result_id_list;
     }
-
-    template<class Iter>
-    static bool filter(DB &db, const std::string_view &method, const std::string_view &value, Iter result_begin, Iter result_end)
-    {
-        std::vector<uint32_t> method_result;
-        if (method == std::string_view("contains"))
-        {
-            method_result = contains(db, value);
-        }
-        else if (method == std::string_view("any"))
-        {
-            method_result = any(db, value);
-        }
-        else
-        {
-            return false;
-        }
-
-        std::remove_if(result_begin, result_end, [](uint32_t id)
-        {
-            return std::find(method_result.begin(), method_result.end(), id) == method_result.end();
-        });
-
-        return true;
-    }
 };

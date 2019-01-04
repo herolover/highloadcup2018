@@ -23,8 +23,304 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <string_view>
 
 #include <rapidjson/filereadstream.h>
+
+using namespace std::literals;
+
+template<class Range>
+std::vector<uint32_t> convert_range_to_list(const Range &range)
+{
+    std::vector<uint32_t> result;
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        result.push_back(it->id);
+    }
+
+    return result;
+}
+
+template<class Iter, class Range>
+Iter filter_by_range(Iter begin, Iter end, const Range &range)
+{
+    return std::remove_if(begin, end, [&](uint32_t id)
+    {
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            if (it->id == id)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    });
+}
+
+template<class Iter>
+Iter filter_by_list(Iter begin, Iter end, const std::vector<uint32_t> &id_list)
+{
+    return std::remove_if(begin, end, [&](uint32_t id)
+    {
+        return std::find(id_list.begin(), id_list.end(), id) == id_list.end();
+    });
+}
+
+bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &result)
+{
+    auto begin = result.begin();
+    auto end = result.end();
+
+    bool is_inited = false;
+    auto process_range = [&](auto &&range)
+    {
+        if (is_inited)
+        {
+            end = filter_by_range(begin, end, range);
+        }
+        else
+        {
+            is_inited = true;
+
+            result = convert_range_to_list(range);
+            begin = result.begin();
+            end = result.end();
+        }
+    };
+
+    auto process_list = [&](auto &&list)
+    {
+        if (is_inited)
+        {
+            end = filter_by_list(begin, end, list);
+        }
+        else
+        {
+            is_inited = true;
+
+            result = list;
+            begin = result.begin();
+            end = result.end();
+        }
+    };
+
+    auto target_parts = split(target, '?');
+    auto query_params = split(target_parts[1], '&');
+    for (auto &query_param : query_params)
+    {
+        auto key_value = split(query_param, '=');
+        if (key_value[0] == "query_id"sv || key_value[0] == "limit"sv)
+        {
+            continue;
+        }
+
+        auto field_method = split(key_value[0], '_');
+        if (field_method.size() != 2)
+        {
+            return false;
+        }
+
+        auto &field = field_method[0];
+        auto &method = field_method[1];
+        auto &value = key_value[1];
+
+        if (field == "sex"sv)
+        {
+            if (method == "eq"sv)
+            {
+                process_range(FieldQuery<DB::sex_tag>::eq(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "email"sv)
+        {
+            if (method == "domain"sv)
+            {
+                process_range(FieldQuery<DB::email_tag>::domain(db, value));
+            }
+            else if (method == "lt"sv)
+            {
+                process_range(FieldQuery<DB::email_tag>::lt(db, value));
+            }
+            else if (method == "gt"sv)
+            {
+                process_range(FieldQuery<DB::email_tag>::gt(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "status"sv)
+        {
+            if (method == "eq"sv)
+            {
+                process_range(FieldQuery<DB::status_tag>::eq(db, value));
+            }
+            else if (method == "neq"sv)
+            {
+                process_range(FieldQuery<DB::status_tag>::neq(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "fname"sv)
+        {
+            if (method == "eq")
+            {
+                process_range(FieldQuery<DB::first_name_tag>::eq(db, value));
+            }
+            else if (method == "any")
+            {
+                process_range(FieldQuery<DB::first_name_tag>::any(db, value));
+            }
+            else if (method == "null")
+            {
+                process_range(FieldQuery<DB::first_name_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "sname"sv)
+        {
+            if (method == "eq"sv)
+            {
+                process_range(FieldQuery<DB::second_name_tag>::eq(db, value));
+            }
+            else if (method == "starts"sv)
+            {
+                process_range(FieldQuery<DB::second_name_tag>::starts(db, value));
+            }
+            else if (method == "null"sv)
+            {
+                process_range(FieldQuery<DB::second_name_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "phone"sv)
+        {
+            if (method == "code"sv)
+            {
+                process_range(FieldQuery<DB::phone_tag>::code(db, value));
+            }
+            else if (method == "null"sv)
+            {
+                process_range(FieldQuery<DB::phone_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "country"sv)
+        {
+            if (method == "eq"sv)
+            {
+                process_range(FieldQuery<DB::country_tag>::eq(db, value));
+            }
+            else if (method == "null"sv)
+            {
+                process_range(FieldQuery<DB::country_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "city"sv)
+        {
+            if (method == "eq"sv)
+            {
+                process_range(FieldQuery<DB::city_tag>::eq(db, value));
+            }
+            else if (method == "any"sv)
+            {
+                process_range(FieldQuery<DB::city_tag>::any(db, value));
+            }
+            else if (method == "null"sv)
+            {
+                process_range(FieldQuery<DB::city_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "birth"sv)
+        {
+            if (method == "lt"sv)
+            {
+                process_range(FieldQuery<DB::birth_tag>::lt(db, value));
+            }
+            else if (method == "gt"sv)
+            {
+                process_range(FieldQuery<DB::birth_tag>::gt(db, value));
+            }
+            else if (method == "year"sv)
+            {
+                process_range(FieldQuery<DB::birth_tag>::year(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "interests"sv)
+        {
+            if (method == "contains"sv)
+            {
+                process_list(FieldQuery<DB::interest_tag>::contains(db, value));
+            }
+            else if (method == "any"sv)
+            {
+                process_list(FieldQuery<DB::interest_tag>::any(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "likes"sv)
+        {
+            if (method == "contains"sv)
+            {
+                process_list(FieldQuery<DB::like_tag>::contains(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (field == "premium"sv)
+        {
+            if (method == "now"sv)
+            {
+                process_range(FieldQuery<DB::premium_tag>::now(db, value));
+            }
+            else if (method == "null"sv)
+            {
+                process_range(FieldQuery<DB::premium_tag>::null(db, value));
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 
 int main()
 {
@@ -57,15 +353,15 @@ int main()
     std::cout << "city size: " << Account::city_t::size() << std::endl;
     std::cout << "interest size: " << Account::interest_t::size() << std::endl;
 
-    auto now_time = std::time(nullptr);
-    auto range = FieldQuery<DB::like_tag>::contains(db, u8"401");
+    std::vector<uint32_t> result;
+    std::cout << "Result: " << filter(db, "/accounts/filter/?sname_null=0&query_id=2160&limit=18&sex_eq=m", result) << std::endl;
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
 
-    for (auto &id : range)
-    {
-        std::cout << id << ", ";
-    }
+    //for (auto &id : result)
+    //{
+    //    std::cout << id << ", ";
+    //}
     //for (auto it = range.first; it != range.second; ++it)
     //{
     //    //std::cout << it->id << " " << (it->city ? *it->city: "null") << ", ";
