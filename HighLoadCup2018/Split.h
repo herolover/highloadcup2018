@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <set>
+#include <algorithm>
 
 template<class CharType>
 std::vector<std::basic_string_view<CharType>> split(std::basic_string_view<CharType> value, const CharType delimiter = ',')
@@ -23,6 +24,8 @@ std::vector<std::basic_string_view<CharType>> split(std::basic_string_view<CharT
             break;
         }
     }
+
+    std::sort(result.begin(), result.end());
 
     return result;
 }

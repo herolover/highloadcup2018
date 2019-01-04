@@ -86,5 +86,11 @@
     <ClInclude Include="FieldQuery\Like.h">
       <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MakeAnyIter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

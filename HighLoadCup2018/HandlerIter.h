@@ -1,11 +1,10 @@
 #pragma once
 
-template<class iter_type, class Handler>
+template<class ForwardIt, class Handler>
 class handler_iter
 {
 public:
-
-    handler_iter(iter_type it, Handler &&handler)
+    handler_iter(ForwardIt it, Handler &&handler)
         : _it(it)
         , _handler(handler)
     {
@@ -22,7 +21,7 @@ public:
         return _it.operator->();
     }
 
-    bool operator!=(const iter_type &another_it) const
+    bool operator!=(const ForwardIt &another_it) const
     {
         return _it != another_it;
     }
@@ -35,7 +34,15 @@ public:
         return *this;
     }
 
+    handler_iter &operator--()
+    {
+        --_it;
+        _handler(_it);
+
+        return *this;
+    }
+
 private:
-    iter_type _it;
+    ForwardIt _it;
     Handler _handler;
 };

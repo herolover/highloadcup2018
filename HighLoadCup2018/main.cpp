@@ -1,6 +1,8 @@
 ﻿#include "Account.h"
 #include "DBLoader.h"
 #include "DB.h"
+#include "FieldQuery.h"
+#include "Split.h"
 
 #include "FieldQuery/Sex.h"
 #include "FieldQuery/Email.h"
@@ -246,7 +248,7 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
             }
             else if (method == "any"sv)
             {
-                process_range(FieldQuery<DB::city_tag>::any(db, value));
+                //process_range(FieldQuery<DB::city_tag>::any(db, value));
             }
             else if (method == "null"sv)
             {
@@ -353,8 +355,16 @@ int main()
     std::cout << "city size: " << Account::city_t::size() << std::endl;
     std::cout << "interest size: " << Account::interest_t::size() << std::endl;
 
-    std::vector<uint32_t> result;
-    std::cout << "Result: " << filter(db, "/accounts/filter/?sname_null=0&query_id=2160&limit=18&sex_eq=m", result) << std::endl;
+    //auto &index = db.account.get<DB::joined_tag>();
+    //int i = 0;
+    //for (auto it = index.rbegin(); i < 10; ++i, ++it)
+    //{
+    //    std::cout << it->id << " " << it->joined << ", ";
+    //}
+
+    auto range = FieldQuery<DB::first_name_tag>::reverse_any(db, u8"Антон,Егор");
+    //std::vector<uint32_t> result;
+    //std::cout << "Result: " << filter(db, "/accounts/filter/?sname_null=0&query_id=2160&limit=18&sex_eq=m", result) << std::endl;
 
     std::cout << "Count: " << timer.elapsed_seconds() * 1000 << std::endl;
 
@@ -362,13 +372,12 @@ int main()
     //{
     //    std::cout << id << ", ";
     //}
-    //for (auto it = range.first; it != range.second; ++it)
-    //{
-    //    //std::cout << it->id << " " << (it->city ? *it->city: "null") << ", ";
-    //    //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
-    //    //phones.insert(it->phone);
-    //}
-
+    for (auto it = range.first; it != range.second; --it)
+    {
+        std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
+        //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
+        //phones.insert(it->phone);
+    }
 
     return 0;
 }
