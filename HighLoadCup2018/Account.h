@@ -14,11 +14,12 @@ struct Like
 
 struct Account
 {
-    using first_name_t = typename shared_string<0>;
-    using second_name_t = typename shared_string<1>;
-    using country_t = typename shared_string<2>;
-    using city_t = typename shared_string<3>;
-    using interest_t = typename shared_string<4>;
+    using email_t = typename shared_string<0>;
+    using first_name_t = typename shared_string<1>;
+    using second_name_t = typename shared_string<2>;
+    using country_t = typename shared_string<3>;
+    using city_t = typename shared_string<4>;
+    using interest_t = typename shared_string<5>;
 
     enum class Status : uint8_t
     {
@@ -28,7 +29,7 @@ struct Account
     };
 
     uint32_t id;
-    std::string email;
+    email_t email;
     std::string email_domain;
     first_name_t first_name;
     second_name_t second_name;
@@ -47,6 +48,17 @@ struct Account
     std::vector<uint32_t> like;
 
     bool operator<(const Account &a) const
+    {
+        return id < a.id;
+    }
+};
+
+struct ShortAccount
+{
+    uint32_t id;
+    Account::email_t email;
+
+    bool operator<(const ShortAccount &a) const
     {
         return id < a.id;
     }

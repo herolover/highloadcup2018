@@ -34,14 +34,6 @@ public:
         return *this;
     }
 
-    handler_iter &operator--()
-    {
-        --_it;
-        _handler(_it);
-
-        return *this;
-    }
-
 private:
     ForwardIt _it;
     Handler _handler;

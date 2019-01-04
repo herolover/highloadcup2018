@@ -43,7 +43,7 @@ struct DB
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
-                mi::member<Account, std::string, &Account::email>,
+                mi::member<Account, Account::email_t, &Account::email>,
                 string_view_compare
             >,
             mi::ordered_non_unique<
@@ -109,7 +109,7 @@ struct DB
     > account;
     // *INDENT-ON*
 
-    std::map<Account::interest_t, std::vector<uint32_t>, string_view_compare> interest;
+    std::map<Account::interest_t, std::vector<ShortAccount>, string_view_compare> interest;
     std::map<uint32_t, std::vector<uint32_t>> liked_by;
 
     void add_account(Account &&new_account)
@@ -124,7 +124,8 @@ struct DB
         {
             for (auto &account_interest : account.interest)
             {
-                interest[account_interest].push_back(account.id);
+                ShortAccount short_account{account.id, account.email};
+                interest[account_interest].push_back(std::move(short_account));
             }
 
             for (auto &like : account.like)

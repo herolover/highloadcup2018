@@ -73,6 +73,7 @@ public:
     using Type = typename shared_string<ID>;
 
     shared_string() = default;
+    shared_string(const shared_string &) = default;
     shared_string(const std::string_view &value)
     {
         *this = value;

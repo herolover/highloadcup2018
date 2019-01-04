@@ -3,7 +3,7 @@
 #include "../FieldQuery.h"
 
 #include "../HandlerIter.h"
-#include "../MakeAnyIter.h"
+#include "../MakeHandlerIter.h"
 #include "../Common.h"
 #include "../Split.h"
 
@@ -27,7 +27,7 @@ struct FieldQuery<DB::first_name_tag>
             range_list.emplace_back(index.equal_range(first_name));
         }
 
-        return std::make_pair(make_any_iter<false>(index.begin(), index.end(), std::move(range_list)), index.end());
+        return std::make_pair(make_union_iter<false>(std::move(range_list), index.end()), index.end());
     }
 
     static auto reverse_any(DB &db, const std::string_view &value)
@@ -41,7 +41,7 @@ struct FieldQuery<DB::first_name_tag>
             range_list.emplace_back(make_reverse_range(index.equal_range(first_name)));
         }
 
-        return std::make_pair(make_any_iter<true>(index.rbegin(), index.rend(), std::move(range_list)), index.rend());
+        return std::make_pair(make_union_iter<true>(std::move(range_list), index.rend()), index.rend());
     }
 
     static auto null(DB &db, const std::string_view &value)

@@ -139,7 +139,7 @@
     <ClInclude Include="FieldQuery\Phone.h" />
     <ClInclude Include="Convert.h" />
     <ClInclude Include="FieldQuery\Premium.h" />
-    <ClInclude Include="MakeAnyIter.h" />
+    <ClInclude Include="MakeHandlerIter.h" />
     <ClInclude Include="SharedString.h" />
     <ClInclude Include="HandlerIter.h" />
     <ClInclude Include="FieldQuery\SecondName.h" />

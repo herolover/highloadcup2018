@@ -6,9 +6,10 @@
 #include <utility>
 
 template<bool ReverseOrder, class ForwardIt>
-auto make_any_iter(ForwardIt begin_it, ForwardIt end_it, std::vector<std::pair<ForwardIt, ForwardIt>> &&range_list)
+auto make_union_iter(std::vector<std::pair<ForwardIt, ForwardIt>> &&range_list, ForwardIt end_it = {})
 {
     decltype(range_list.begin()) current_range_it;
+    auto begin_it = range_list.front().first;
     return handler_iter(begin_it, [current_range_it, range_list = std::move(range_list), end_it](auto &it) mutable
     {
         if (it != end_it)

@@ -97,7 +97,7 @@ public:
         break;
         case State::EMAIL:
             account.email = value;
-            account.email_domain = account.email.substr(account.email.find('@') + 1);
+            account.email_domain = account.email->substr(account.email->find('@') + 1);
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:

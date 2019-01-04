@@ -282,11 +282,11 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "contains"sv)
             {
-                process_list(FieldQuery<DB::interest_tag>::contains(db, value));
+                //process_list(FieldQuery<DB::interest_tag>::contains(db, value));
             }
             else if (method == "any"sv)
             {
-                process_list(FieldQuery<DB::interest_tag>::any(db, value));
+                //process_list(FieldQuery<DB::interest_tag>::any(db, value));
             }
             else
             {
@@ -362,7 +362,7 @@ int main()
     //    std::cout << it->id << " " << it->joined << ", ";
     //}
 
-    auto range = FieldQuery<DB::first_name_tag>::reverse_any(db, u8"Антон,Егор");
+    auto range = FieldQuery<DB::interest_tag>::any(db, u8"Поцелуи,Симпсоны");
     //std::vector<uint32_t> result;
     //std::cout << "Result: " << filter(db, "/accounts/filter/?sname_null=0&query_id=2160&limit=18&sex_eq=m", result) << std::endl;
 
@@ -372,12 +372,15 @@ int main()
     //{
     //    std::cout << id << ", ";
     //}
-    for (auto it = range.first; it != range.second; --it)
+    for (auto it = range.first; it != range.second; ++it)
     {
-        std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
+        //std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
+        std::cout << it->id << " " << *it->email << ", ";
         //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
         //phones.insert(it->phone);
     }
+
+    std::cout << std::endl;
 
     return 0;
 }
