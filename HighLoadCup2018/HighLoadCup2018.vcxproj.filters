@@ -89,7 +89,10 @@
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MakeHandlerIter.h">
+    <ClInclude Include="UnionIter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntersectionIter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

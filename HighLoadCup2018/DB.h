@@ -39,7 +39,7 @@ struct DB
         mi::indexed_by<
             mi::ordered_unique<
                 mi::tag<id_tag>,
-                mi::identity<Account>
+                mi::member<Account, uint32_t, &Account::id>
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
@@ -136,7 +136,6 @@ struct DB
 
         for (auto &account : liked_by)
         {
-            std::sort(account.second.begin(), account.second.end());
             account.second.erase(std::unique(account.second.begin(), account.second.end()), account.second.end());
         }
     }

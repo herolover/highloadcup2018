@@ -51,6 +51,16 @@ struct Account
     {
         return id < a.id;
     }
+
+    bool operator==(const Account &a) const
+    {
+        return id == a.id;
+    }
+
+    bool operator!=(const Account &a) const
+    {
+        return id != a.id;
+    }
 };
 
 struct ShortAccount
@@ -61,5 +71,15 @@ struct ShortAccount
     bool operator<(const ShortAccount &a) const
     {
         return id < a.id;
+    }
+
+    bool operator==(const ShortAccount &a) const
+    {
+        return id == a.id;
+    }
+
+    bool operator!=(const ShortAccount &a) const
+    {
+        return id != a.id;
     }
 };

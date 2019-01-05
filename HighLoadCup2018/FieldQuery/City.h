@@ -3,8 +3,7 @@
 #include "../FieldQuery.h"
 
 #include "../Split.h"
-#include "../HandlerIter.h"
-#include "../MakeHandlerIter.h"
+#include "../UnionIter.h"
 #include "../Common.h"
 
 template<>
@@ -21,14 +20,13 @@ struct FieldQuery<DB::city_tag>
         auto &index = db.account.get<DB::city_tag>();
 
         using IterType = decltype(index.begin());
-        using RangeType = std::pair<IterType, IterType>;
-        std::vector<RangeType> range_list;
+        std::vector<std::pair<IterType, IterType>> range_list;
         for (auto &city : split(value))
         {
             range_list.push_back(index.equal_range(city));
         }
 
-        return std::make_pair(make_union_iter<false>(std::move(range_list), index.end()), index.end());
+        return std::make_pair(union_iter<false, IterType>(range_list), union_iter<false, IterType>(range_list, true));
     }
 
     static auto reverse_any(DB &db, const std::string_view &value)
@@ -36,14 +34,13 @@ struct FieldQuery<DB::city_tag>
         auto &index = db.account.get<DB::city_tag>();
 
         using IterType = decltype(index.rbegin());
-        using RangeType = std::pair<IterType, IterType>;
-        std::vector<RangeType> range_list;
+        std::vector<std::pair<IterType, IterType>> range_list;
         for (auto &city : split(value))
         {
             range_list.push_back(make_reverse_range(index.equal_range(city)));
         }
 
-        return std::make_pair(make_union_iter<true>(std::move(range_list), index.rend()), index.rend());
+        return std::make_pair(union_iter<true, IterType>(range_list), union_iter<true, IterType>(range_list, true));
     }
 
     static auto null(DB &db, const std::string_view &value)
