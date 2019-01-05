@@ -47,6 +47,16 @@ struct Account
     int32_t premium_finish = 0;
     std::vector<uint32_t> like;
 
+    uint32_t &get_id()
+    {
+        return id;
+    }
+
+    email_t &get_email()
+    {
+        return email;
+    }
+
     bool operator<(const Account &a) const
     {
         return id < a.id;
@@ -58,27 +68,6 @@ struct Account
     }
 
     bool operator!=(const Account &a) const
-    {
-        return id != a.id;
-    }
-};
-
-struct ShortAccount
-{
-    uint32_t id;
-    Account::email_t email;
-
-    bool operator<(const ShortAccount &a) const
-    {
-        return id < a.id;
-    }
-
-    bool operator==(const ShortAccount &a) const
-    {
-        return id == a.id;
-    }
-
-    bool operator!=(const ShortAccount &a) const
     {
         return id != a.id;
     }

@@ -109,8 +109,52 @@ struct DB
     > account;
     // *INDENT-ON*
 
-    std::map<Account::interest_t, std::vector<ShortAccount>, string_view_compare> interest;
-    std::map<uint32_t, std::vector<uint32_t>> liked_by;
+    using AccountIt = decltype(account)::index<id_tag>::type::iterator;
+
+    class AccountReference
+    {
+    public:
+        AccountReference(AccountIt it)
+            : _it(it)
+        {
+        }
+
+        const uint32_t &get_id()
+        {
+            return _it->id;
+        }
+
+        const Account::email_t &get_email()
+        {
+            return _it->email;
+        }
+
+        AccountReference(const AccountReference &) = default;
+        AccountReference(AccountReference &&) = default;
+        AccountReference &operator=(const AccountReference &) = default;
+        AccountReference &operator=(AccountReference &&) = default;
+
+        bool operator<(const AccountReference &another) const
+        {
+            return _it->id < another._it->id;
+        }
+
+        bool operator==(const AccountReference &another) const
+        {
+            return _it->id == another._it->id;
+        }
+
+        bool operator!=(const AccountReference &another) const
+        {
+            return _it->id != another._it->id;
+        }
+
+    private:
+        AccountIt _it;
+    };
+
+    std::map<Account::interest_t, std::vector<AccountReference>, string_view_compare> interest;
+    std::map<uint32_t, std::vector<AccountReference>> liked_by;
 
     void add_account(Account &&new_account)
     {
@@ -120,17 +164,17 @@ struct DB
     void build_indicies()
     {
         auto &index = account.get<id_tag>();
-        for (auto &account : index)
+        for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
         {
+            auto &account = *account_it;
             for (auto &account_interest : account.interest)
             {
-                ShortAccount short_account{account.id, account.email};
-                interest[account_interest].push_back(std::move(short_account));
+                interest[account_interest].push_back(account_it);
             }
 
             for (auto &like : account.like)
             {
-                liked_by[like].push_back(account.id);
+                liked_by[like].push_back(account_it);
             }
         }
 

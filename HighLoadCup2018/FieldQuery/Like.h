@@ -12,8 +12,8 @@ struct FieldQuery<DB::like_tag>
 {
     static auto contains(DB &db, const std::string_view &value)
     {
-        bool is_inited = false;
-        std::vector<uint32_t> result_id_list;
+        using IterType = std::vector<DB::AccountReference>::iterator;
+        std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &id_string : split(value))
         {
@@ -21,20 +21,26 @@ struct FieldQuery<DB::like_tag>
             std::from_chars(id_string.data(), id_string.data() + id_string.size(), id);
 
             auto &id_list = db.liked_by[id];
-            if (!is_inited)
-            {
-                result_id_list = id_list;
-                is_inited = true;
-            }
-            else
-            {
-                result_id_list.erase(std::remove_if(result_id_list.begin(), result_id_list.end(), [&](uint32_t id)
-                {
-                    return !std::binary_search(id_list.begin(), id_list.end(), id);
-                }), result_id_list.end());
-            }
+            range_list.push_back(std::make_pair(id_list.begin(), id_list.end()));
         }
 
-        return result_id_list;
+        return std::make_pair(intersection_iter<false, IterType>(range_list), intersection_iter<false, IterType>(range_list, true));
+    }
+
+    static auto reverse_contains(DB &db, const std::string_view &value)
+    {
+        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
+        std::vector<std::pair<IterType, IterType>> range_list;
+
+        for (auto &id_string : split(value))
+        {
+            uint32_t id = 0;
+            std::from_chars(id_string.data(), id_string.data() + id_string.size(), id);
+
+            auto &id_list = db.liked_by[id];
+            range_list.push_back(std::make_pair(id_list.rbegin(), id_list.rend()));
+        }
+
+        return std::make_pair(intersection_iter<true, IterType>(range_list), intersection_iter<true, IterType>(range_list, true));
     }
 };

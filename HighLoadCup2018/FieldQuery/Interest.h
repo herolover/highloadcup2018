@@ -12,7 +12,7 @@ struct FieldQuery<DB::interest_tag>
 {
     static auto contains(DB &db, const std::string_view &value)
     {
-        using IterType = std::vector<ShortAccount>::iterator;
+        using IterType = std::vector<DB::AccountReference>::iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &interest : split(value))
@@ -26,7 +26,7 @@ struct FieldQuery<DB::interest_tag>
 
     static auto reverse_contains(DB &db, const std::string_view &value)
     {
-        using IterType = std::vector<ShortAccount>::reverse_iterator;
+        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &interest : split(value))
@@ -40,7 +40,7 @@ struct FieldQuery<DB::interest_tag>
 
     static auto any(DB &db, const std::string_view &value)
     {
-        using IterType = std::vector<ShortAccount>::iterator;
+        using IterType = std::vector<DB::AccountReference>::iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &interest : split(value))
@@ -54,7 +54,7 @@ struct FieldQuery<DB::interest_tag>
 
     static auto reverse_any(DB &db, const std::string_view &value)
     {
-        using IterType = std::vector<ShortAccount>::reverse_iterator;
+        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &interest : split(value))

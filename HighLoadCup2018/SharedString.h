@@ -95,6 +95,9 @@ public:
         return *this;
     }
 
+    Type &operator=(const shared_string &) = default;
+    Type &operator=(shared_string &&) = default;
+
     operator bool() const
     {
         return _value != nullptr;

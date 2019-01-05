@@ -29,83 +29,17 @@
 
 #include <rapidjson/filereadstream.h>
 
+#include <boost/fusion/include/for_each.hpp>
+#include <boost/fusion/include/push_back.hpp>
+#include <boost/fusion/include/vector.hpp>
+#include <boost/fusion/include/make_vector.hpp>
+
 using namespace std::literals;
-
-template<class Range>
-std::vector<uint32_t> convert_range_to_list(const Range &range)
-{
-    std::vector<uint32_t> result;
-    for (auto it = range.first; it != range.second; ++it)
-    {
-        result.push_back(it->id);
-    }
-
-    return result;
-}
-
-template<class Iter, class Range>
-Iter filter_by_range(Iter begin, Iter end, const Range &range)
-{
-    return std::remove_if(begin, end, [&](uint32_t id)
-    {
-        for (auto it = range.first; it != range.second; ++it)
-        {
-            if (it->id == id)
-            {
-                return false;
-            }
-        }
-
-        return false;
-    });
-}
-
-template<class Iter>
-Iter filter_by_list(Iter begin, Iter end, const std::vector<uint32_t> &id_list)
-{
-    return std::remove_if(begin, end, [&](uint32_t id)
-    {
-        return std::find(id_list.begin(), id_list.end(), id) == id_list.end();
-    });
-}
 
 bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &result)
 {
     auto begin = result.begin();
     auto end = result.end();
-
-    bool is_inited = false;
-    auto process_range = [&](auto &&range)
-    {
-        if (is_inited)
-        {
-            end = filter_by_range(begin, end, range);
-        }
-        else
-        {
-            is_inited = true;
-
-            result = convert_range_to_list(range);
-            begin = result.begin();
-            end = result.end();
-        }
-    };
-
-    auto process_list = [&](auto &&list)
-    {
-        if (is_inited)
-        {
-            end = filter_by_list(begin, end, list);
-        }
-        else
-        {
-            is_inited = true;
-
-            result = list;
-            begin = result.begin();
-            end = result.end();
-        }
-    };
 
     auto target_parts = split(target, '?');
     auto query_params = split(target_parts[1], '&');
@@ -131,7 +65,7 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "eq"sv)
             {
-                process_range(FieldQuery<DB::sex_tag>::eq(db, value));
+                (FieldQuery<DB::sex_tag>::eq(db, value));
             }
             else
             {
@@ -142,15 +76,15 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "domain"sv)
             {
-                process_range(FieldQuery<DB::email_tag>::domain(db, value));
+                (FieldQuery<DB::email_tag>::domain(db, value));
             }
             else if (method == "lt"sv)
             {
-                process_range(FieldQuery<DB::email_tag>::lt(db, value));
+                (FieldQuery<DB::email_tag>::lt(db, value));
             }
             else if (method == "gt"sv)
             {
-                process_range(FieldQuery<DB::email_tag>::gt(db, value));
+                (FieldQuery<DB::email_tag>::gt(db, value));
             }
             else
             {
@@ -161,11 +95,11 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "eq"sv)
             {
-                process_range(FieldQuery<DB::status_tag>::eq(db, value));
+                (FieldQuery<DB::status_tag>::eq(db, value));
             }
             else if (method == "neq"sv)
             {
-                process_range(FieldQuery<DB::status_tag>::neq(db, value));
+                (FieldQuery<DB::status_tag>::neq(db, value));
             }
             else
             {
@@ -195,15 +129,15 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "eq"sv)
             {
-                process_range(FieldQuery<DB::second_name_tag>::eq(db, value));
+                (FieldQuery<DB::second_name_tag>::eq(db, value));
             }
             else if (method == "starts"sv)
             {
-                process_range(FieldQuery<DB::second_name_tag>::starts(db, value));
+                (FieldQuery<DB::second_name_tag>::starts(db, value));
             }
             else if (method == "null"sv)
             {
-                process_range(FieldQuery<DB::second_name_tag>::null(db, value));
+                (FieldQuery<DB::second_name_tag>::null(db, value));
             }
             else
             {
@@ -214,11 +148,11 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "code"sv)
             {
-                process_range(FieldQuery<DB::phone_tag>::code(db, value));
+                (FieldQuery<DB::phone_tag>::code(db, value));
             }
             else if (method == "null"sv)
             {
-                process_range(FieldQuery<DB::phone_tag>::null(db, value));
+                (FieldQuery<DB::phone_tag>::null(db, value));
             }
             else
             {
@@ -229,11 +163,11 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "eq"sv)
             {
-                process_range(FieldQuery<DB::country_tag>::eq(db, value));
+                (FieldQuery<DB::country_tag>::eq(db, value));
             }
             else if (method == "null"sv)
             {
-                process_range(FieldQuery<DB::country_tag>::null(db, value));
+                (FieldQuery<DB::country_tag>::null(db, value));
             }
             else
             {
@@ -244,7 +178,7 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "eq"sv)
             {
-                process_range(FieldQuery<DB::city_tag>::eq(db, value));
+                (FieldQuery<DB::city_tag>::eq(db, value));
             }
             else if (method == "any"sv)
             {
@@ -252,7 +186,7 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
             }
             else if (method == "null"sv)
             {
-                process_range(FieldQuery<DB::city_tag>::null(db, value));
+                (FieldQuery<DB::city_tag>::null(db, value));
             }
             else
             {
@@ -263,15 +197,15 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "lt"sv)
             {
-                process_range(FieldQuery<DB::birth_tag>::lt(db, value));
+                (FieldQuery<DB::birth_tag>::lt(db, value));
             }
             else if (method == "gt"sv)
             {
-                process_range(FieldQuery<DB::birth_tag>::gt(db, value));
+                (FieldQuery<DB::birth_tag>::gt(db, value));
             }
             else if (method == "year"sv)
             {
-                process_range(FieldQuery<DB::birth_tag>::year(db, value));
+                (FieldQuery<DB::birth_tag>::year(db, value));
             }
             else
             {
@@ -297,7 +231,7 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "contains"sv)
             {
-                process_list(FieldQuery<DB::like_tag>::contains(db, value));
+                (FieldQuery<DB::like_tag>::contains(db, value));
             }
             else
             {
@@ -308,11 +242,11 @@ bool filter(DB &db, const std::string_view &target, std::vector<uint32_t> &resul
         {
             if (method == "now"sv)
             {
-                process_range(FieldQuery<DB::premium_tag>::now(db, value));
+                (FieldQuery<DB::premium_tag>::now(db, value));
             }
             else if (method == "null"sv)
             {
-                process_range(FieldQuery<DB::premium_tag>::null(db, value));
+                (FieldQuery<DB::premium_tag>::null(db, value));
             }
             else
             {
@@ -343,8 +277,6 @@ int main()
         reader.Parse(file_stream, db_loader);
         std::fclose(fp);
     }
-
-    std::cout << "Finished: " << db.account.size() << " " << timer.reset() * 1000 << std::endl;
 
     db.build_indicies();
 
@@ -392,10 +324,20 @@ int main()
     timer.reset();
     //auto range = FieldQuery<DB::first_name_tag>::reverse_any(db, u8"Егор,Антон");
     //auto range = FieldQuery<DB::city_tag>::any(db, u8"Белово,Забург,Лейпориж");
-    auto range = FieldQuery<DB::interest_tag>::reverse_contains(db, u8"Чудак,Общение"sv);
+    //auto range = FieldQuery<DB::interest_tag>::reverse_contains(db, u8"Чудак,Общение"sv);
     //auto range = FieldQuery<DB::interest_tag>::reverse_any(db, u8"Симпсоны");
+    auto range = FieldQuery<DB::like_tag>::reverse_contains(db, u8"26566");
     //std::vector<uint32_t> result;
     //std::cout << "Result: " << filter(db, "/accounts/filter/?sname_null=0&query_id=2160&limit=18&sex_eq=m", result) << std::endl;
+
+    auto range1 = FieldQuery<DB::second_name_tag>::null(db, "0");
+    auto range2 = FieldQuery<DB::sex_tag>::eq(db, "m");
+
+    boost::fusion::vector vec2 = boost::fusion::make_vector(range1, range1);
+    boost::fusion::for_each(vec2, [](auto &it)
+    {
+        std::cout << it.first->id << " " << *it.first->first_name << std::endl;
+    });
 
     auto elapsed_seconds = timer.elapsed_seconds() * 1000;
 
@@ -409,7 +351,7 @@ int main()
     {
         //std::cout << it->id << " " << (it->first_name ? *it->first_name : "null") << ", ";
         //std::cout << it->id << " " << (it->city ? *it->city : "null") << ", ";
-        std::cout << it->id << " " << *it->email << ", ";
+        std::cout << it->get_id() << " " << *it->get_email() << ", ";
         //std::cout << it->id << " " << it->birth << " " << it->birth_year << ", ";
         //phones.insert(it->phone);
     }
