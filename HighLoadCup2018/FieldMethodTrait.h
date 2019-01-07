@@ -11,23 +11,12 @@
 
 using namespace std::literals;
 
-template<class F, class M>
-struct t_select
+template<class F>
+struct t_get_json_value
 {
-    template<class Handler>
-    void operator()(DB &db, const Value &value, Handler &&handler) const
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
-        throw std::runtime_error("Not implemented");
-    }
-};
-
-template<class F, class M>
-struct t_check
-{
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &value) const
-    {
-        throw std::runtime_error("Not implemented");
+        return rapidjson::Value(rapidjson::StringRef(""));
     }
 };
 
@@ -49,11 +38,21 @@ struct t_value<F, m_null>
     }
 };
 
-template<class F>
-struct t_get_json_value
+template<class F, class M>
+struct t_select
 {
-    rapidjson::Value operator()(const Account &account) const
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        return rapidjson::Value(rapidjson::StringRef(""));
+        throw std::runtime_error("Not implemented");
+    }
+};
+
+template<class F, class M>
+struct t_check
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        throw std::runtime_error("Not implemented");
     }
 };

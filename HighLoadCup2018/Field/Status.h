@@ -1,32 +1,79 @@
 #pragma once
 
-#include "../DB.h"
+#include "../FieldMethodTrait.h"
 #include "../HandlerIter.h"
-#include "../DBLoader.h"
+#include "../Convert.h"
 
-#include <string_view>
-
-struct status
+template<>
+struct t_get_json_value<f_status>
 {
-    static auto eq(DB &db, const std::string_view &value)
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
-        auto status = convert_account_status(value);
-        auto &index = db.account.get<DB::status_tag>();
-        return index.equal_range(status);
+        return rapidjson::Value(rapidjson::StringRef(convert_account_status(account.status)));
     }
+};
 
-    static auto neq(DB &db, const std::string_view &value)
+template<>
+struct t_value<f_status, m_eq>
+{
+    Value operator()(const std::string_view &value) const
     {
-        auto status = convert_account_status(value);
-        auto &index = db.account.get<DB::status_tag>();
-        auto ignore_range = index.equal_range(status);
+        return convert_account_status(value);
+    }
+};
 
-        return std::make_pair(handler_iter(index.begin(), [ignore_range = std::move(ignore_range)](auto &it)
+template<>
+struct t_value<f_status, m_neq>
+{
+    Value operator()(const std::string_view &value) const
+    {
+        return convert_account_status(value);
+    }
+};
+
+template<>
+struct t_select<f_status, m_eq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        handler(make_reverse_range(db.account.get<DB::status_tag>().equal_range(std::get<Account::Status>(value))));
+    }
+};
+
+template<>
+struct t_select<f_status, m_neq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        auto &index = db.account.get<DB::status_tag>();
+        auto ignore_range = index.equal_range(std::get<Account::Status>(value));
+
+        handler(std::make_pair(handler_iter(index.begin(), [ignore_range = std::move(ignore_range)](auto &it)
         {
             if (it == ignore_range.first)
             {
                 it = ignore_range.second;
             }
-        }), index.end());
+        }), index.end()));
+    }
+};
+
+template<>
+struct t_check<f_status, m_eq>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return account.status == std::get<Account::Status>(value);
+    }
+};
+
+template<>
+struct t_check<f_status, m_neq>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return account.status != std::get<Account::Status>(value);
     }
 };

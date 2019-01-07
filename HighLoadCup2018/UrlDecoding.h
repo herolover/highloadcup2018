@@ -27,6 +27,10 @@ inline std::string decode_url(const std::string_view &value)
             result.push_back(decoded_c);
             i += 2;
         }
+        else if (c == '+')
+        {
+            result.push_back(' ');
+        }
         else
         {
             result.push_back(c);

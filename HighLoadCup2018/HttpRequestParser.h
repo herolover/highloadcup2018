@@ -6,6 +6,16 @@
 
 #include "Field/Birth.h"
 #include "Field/City.h"
+#include "Field/Country.h"
+#include "Field/Email.h"
+#include "Field/FirstName.h"
+#include "Field/Interests.h"
+#include "Field/Likes.h"
+#include "Field/Phone.h"
+#include "Field/Premium.h"
+#include "Field/SecondName.h"
+#include "Field/Sex.h"
+#include "Field/Status.h"
 
 #include <string_view>
 #include <variant>

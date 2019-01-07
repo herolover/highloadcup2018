@@ -32,21 +32,33 @@ struct RequestHandler<FilterAccounts>
 
         for_field_method(index_by_field_it->field, index_by_field_it->method, [&db, &request, &response, &index_by_field_it](auto &&field, auto &&method)
         {
-            uint8_t counter = 0;
-            t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, index_by_field_it->value, [&counter, &db, &request, &response, &index_by_field_it](auto &&range)
+            t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, index_by_field_it->value, [&db, &request, &response, &index_by_field_it](auto &&range)
             {
                 std::vector<uint32_t> id_list;
-
-                for (auto &it = range.first; it != range.second && counter < request.limit; ++it)
+                for (auto &it = range.first; it != range.second; ++it)
                 {
+                    id_list.push_back(it->get_id());
+                }
+
+                std::sort(id_list.begin(), id_list.end(), std::greater<int>());
+
+                rj::Document document;
+                rj::Value account_array(rj::kArrayType);
+                std::size_t counter = 0;
+                for (std::size_t i = 0; i < id_list.size() && counter < request.limit; ++i)
+                {
+                    auto &id = id_list[i];
+                    auto &id_index = db.account.get<DB::id_tag>();
+                    auto &account = id_index[id - id_index.front().id];
+
                     bool is_suitable = true;
                     for (auto filter_it = request.filter.begin(); filter_it != request.filter.end(); ++filter_it)
                     {
                         if (filter_it != index_by_field_it)
                         {
-                            bool check_result = for_field_method(filter_it->field, filter_it->method, [&it, &filter_it](auto &&field, auto &&method)
+                            bool check_result = for_field_method(filter_it->field, filter_it->method, [&account, &filter_it](auto &&field, auto &&method)
                             {
-                                return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(it, filter_it->value);
+                                return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter_it->value);
                             });
 
                             if (!check_result)
@@ -58,36 +70,33 @@ struct RequestHandler<FilterAccounts>
                     }
                     if (is_suitable)
                     {
-                        id_list.emplace_back(it->id);
                         ++counter;
-                    }
-                }
 
-                std::sort(id_list.begin(), id_list.end(), std::greater<int>());
+                        rj::Value json_account(rj::kObjectType);
+                        json_account.AddMember("id", id, document.GetAllocator());
+                        json_account.AddMember("email", rj::Value(rj::StringRef(account.email)), document.GetAllocator());
 
-                rj::Document document;
-                rj::Value account_array(rj::kArrayType);
-                for (auto &id : id_list)
-                {
-                    auto &account = db.account.get<DB::id_tag>()[id - 1];
-
-                    rj::Value json_account(rj::kObjectType);
-                    json_account.AddMember("id", id, document.GetAllocator());
-                    json_account.AddMember("email", rj::Value(rj::StringRef(account.email)), document.GetAllocator());
-
-                    for (auto &filter : request.filter)
-                    {
-                        std::visit([&document, &account, &json_account](auto &&field)
+                        for (auto &filter : request.filter)
                         {
-                            using field_type = std::decay_t<decltype(field)>;
-                            if (field.name != "id"sv && field.name != "email"sv)
+                            for_field_method(filter.field, filter.method, [&document, &account, &json_account, &filter](auto &&field, auto &&method)
                             {
-                                json_account.AddMember(rj::StringRef(field.name.data()), t_get_json_value<field_type>()(account), document.GetAllocator());
-                            }
-                        }, filter.field);
-                    }
+                                using field_type = std::decay_t<decltype(field)>;
+                                using method_type = std::decay_t<decltype(method)>;
+                                if constexpr(!std::is_same_v<f_email, field_type> &&
+                                             !std::is_same_v<f_interests, field_type> &&
+                                             !std::is_same_v<f_likes, field_type>)
+                                {
+                                    constexpr bool is_method_null = std::is_same_v<m_null, method_type>;
+                                    if (!(is_method_null && std::get<bool>(filter.value)))
+                                    {
+                                        json_account.AddMember(rj::StringRef(field.name.data()), t_get_json_value<field_type>()(account, document.GetAllocator()), document.GetAllocator());
+                                    }
+                                }
+                            });
+                        }
 
-                    account_array.PushBack(json_account, document.GetAllocator());
+                        account_array.PushBack(json_account, document.GetAllocator());
+                    }
                 }
 
                 document.SetObject();

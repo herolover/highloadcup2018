@@ -1,27 +1,51 @@
 #pragma once
 
-#include "../DB.h"
+#include "../FieldMethodTrait.h"
 
-#include <string_view>
-
-struct phone
+template<>
+struct t_get_json_value<f_phone>
 {
-    static auto code(DB &db, const std::string_view &value)
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
-        auto &index = db.account.get<DB::phone_code_tag>();
-        return index.equal_range(value);
+        return rapidjson::Value(rapidjson::StringRef(account.phone));
     }
+};
 
-    static auto null(DB &db, const std::string_view &value)
+template<>
+struct t_select<f_phone, m_code>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        handler(make_reverse_range(db.account.get<DB::phone_code_tag>().equal_range(std::get<std::string_view>(value))));
+    }
+};
+
+template<>
+struct t_select<f_phone, m_null>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
     {
         auto &index = db.account.get<DB::phone_tag>();
-        if (value[0] == '0')
-        {
-            return std::make_pair(index.upper_bound(""), index.end());
-        }
-        else
-        {
-            return index.equal_range("");
-        }
+        handler(make_reverse_range(std::get<bool>(value) ? index.equal_range("") : std::make_pair(index.upper_bound(""), index.end())));
+    }
+};
+
+template<>
+struct t_check<f_phone, m_code>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return account.phone_code == std::get<std::string_view>(value);
+    }
+};
+
+template<>
+struct t_check<f_phone, m_null>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return std::get<bool>(value) == account.phone.empty();
     }
 };

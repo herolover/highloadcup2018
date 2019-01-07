@@ -11,6 +11,12 @@ struct invalid
     constexpr static std::string_view name = ""sv;
 };
 
+struct f_id
+{
+    constexpr static int priority = 0;
+    constexpr static std::string_view name = "id"sv;
+};
+
 struct f_sex
 {
     constexpr static int priority = 100;
@@ -61,7 +67,7 @@ struct f_city
 
 struct f_birth
 {
-    constexpr static int priority = 4;
+    constexpr static int priority = 10;
     constexpr static std::string_view name = "birth"sv;
 };
 
@@ -100,6 +106,7 @@ struct m_now {};
 // *INDENT-OFF*
 using Field = std::variant<
     invalid,
+    f_id,
     f_sex,
     f_email,
     f_status,
@@ -131,6 +138,7 @@ using Method = std::variant<
 using Value = std::variant<
     std::string_view,
     std::vector<std::string_view>,
+    std::vector<uint32_t>,
     std::nullptr_t,
     uint32_t,
     uint16_t,

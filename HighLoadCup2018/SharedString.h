@@ -6,6 +6,16 @@
 
 using string_ptr = std::shared_ptr<std::string>;
 
+inline bool operator==(const std::string &a, const std::string_view &b)
+{
+    return std::string_view(a.c_str(), a.size()) == b;
+}
+
+inline bool operator==(const std::string_view &a, const std::string &b)
+{
+    return a == std::string_view(b.c_str(), b.size());
+}
+
 inline bool operator<(const std::string &a, const std::string_view &b)
 {
     return std::string_view(a.c_str(), a.size()) < b;

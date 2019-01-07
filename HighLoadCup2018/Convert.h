@@ -39,17 +39,17 @@ inline Account::Status convert_account_status(const std::string_view &value)
     }
 }
 
-inline std::string_view convert_account_status(Account::Status status)
+inline const char *convert_account_status(Account::Status status)
 {
     switch (status)
     {
     case Account::Status::FREE:
-        return u8"свободны"sv;
+        return u8"свободны";
     case Account::Status::BUSY:
-        return u8"заняты"sv;
+        return u8"заняты";
     case Account::Status::COMPLICATED:
-        return u8"всё сложно"sv;
+        return u8"всё сложно";
     default:
-        return ""sv;
+        return "";
     }
 }

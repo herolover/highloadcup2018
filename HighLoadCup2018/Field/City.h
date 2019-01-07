@@ -9,7 +9,7 @@
 template<>
 struct t_get_json_value<f_city>
 {
-    rapidjson::Value operator()(const Account &account) const
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
         return rapidjson::Value(rapidjson::StringRef(*account.city));
     }
@@ -23,7 +23,7 @@ struct t_value<f_city, m_any>
         auto city_list = split(value);
         std::sort(city_list.begin(), city_list.end());
 
-        return city_list;
+        return std::move(city_list);
     }
 };
 
@@ -70,31 +70,27 @@ struct t_select<f_city, m_null>
 template<>
 struct t_check<f_city, m_eq>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &value) const
+    bool operator()(const Account &account, const Value &value) const
     {
-        return it->city && it->city == std::get<std::string_view>(value);
+        return account.city && account.city == std::get<std::string_view>(value);
     }
 };
 
 template<>
 struct t_check<f_city, m_any>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &value) const
+    bool operator()(const Account &account, const Value &value) const
     {
         auto &city_list = std::get<std::vector<std::string_view>>(value);
-        return it->city && std::binary_search(city_list.begin(), city_list.end(), std::string_view(it->city->c_str(), it->city->size()));
+        return (bool)account.city && std::binary_search(city_list.begin(), city_list.end(), std::string_view(account.city->c_str(), account.city->size()));
     }
 };
 
 template<>
 struct t_check<f_city, m_null>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &value) const
+    bool operator()(const Account &account, const Value &value) const
     {
-        const bool &is_null = std::get<bool>(value);
-        return is_null == !it->city;
+        return std::get<bool>(value) == !account.city;
     }
 };

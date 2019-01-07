@@ -44,7 +44,6 @@ struct DB
         mi::indexed_by<
             mi::random_access<
                 mi::tag<id_tag>
-                //mi::member<Account, uint32_t, &Account::id>
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
@@ -124,6 +123,11 @@ struct DB
         {
         }
 
+        const uint32_t &get_id() const
+        {
+            return _it->id;
+        }
+
         auto &operator*() const
         {
             return *_it;
@@ -164,6 +168,7 @@ struct DB
     void build_indicies()
     {
         auto &index = account.get<id_tag>();
+        index.sort();
         for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
         {
             auto &account = *account_it;

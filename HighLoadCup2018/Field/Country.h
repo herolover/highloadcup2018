@@ -1,27 +1,51 @@
 #pragma once
 
-#include "../DB.h"
+#include "../FieldMethodTrait.h"
 
-#include <string_view>
-
-struct country
+template<>
+struct t_get_json_value<f_country>
 {
-    static auto eq(DB &db, const std::string_view &value)
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
-        auto &index = db.account.get<DB::country_tag>();
-        return index.equal_range(value);
+        return rapidjson::Value(rapidjson::StringRef(*account.country));
     }
+};
 
-    static auto null(DB &db, const std::string_view &value)
+template<>
+struct t_select<f_country, m_eq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        handler(make_reverse_range(db.account.get<DB::country_tag>().equal_range(std::get<std::string_view>(value))));
+    }
+};
+
+template<>
+struct t_select<f_country, m_null>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
     {
         auto &index = db.account.get<DB::country_tag>();
-        if (value[0] == '0')
-        {
-            return std::make_pair(index.upper_bound(nullptr), index.end());
-        }
-        else
-        {
-            return index.equal_range(nullptr);
-        }
+        handler(make_reverse_range(std::get<bool>(value) ? index.equal_range(nullptr) : std::make_pair(index.upper_bound(nullptr), index.end())));
+    }
+};
+
+template<>
+struct t_check<f_country, m_eq>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return account.country && account.country == std::get<std::string_view>(value);
+    }
+};
+
+template<>
+struct t_check<f_country, m_null>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return std::get<bool>(value) == !account.country;
     }
 };

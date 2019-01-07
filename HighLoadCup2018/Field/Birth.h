@@ -5,7 +5,7 @@
 template<>
 struct t_get_json_value<f_birth>
 {
-    rapidjson::Value operator()(const Account &account) const
+    rapidjson::Value operator()(const Account &account, rapidjson::MemoryPoolAllocator<> &allocator) const
     {
         return rapidjson::Value(account.birth);
     }
@@ -82,29 +82,26 @@ struct t_select<f_birth, m_year>
 template<>
 struct t_check<f_birth, m_lt>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &date) const
+    bool operator()(const Account &account, const Value &date) const
     {
-        return it->birth < std::get<int32_t>(date);
+        return account.birth < std::get<int32_t>(date);
     }
 };
 
 template<>
 struct t_check<f_birth, m_gt>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &date) const
+    bool operator()(const Account &account, const Value &date) const
     {
-        return it->birth > std::get<int32_t>(date);
+        return account.birth > std::get<int32_t>(date);
     }
 };
 
 template<>
 struct t_check<f_birth, m_year>
 {
-    template<class ForwardIt>
-    bool operator()(const ForwardIt &it, const Value &year) const
+    bool operator()(const Account &account, const Value &year) const
     {
-        return it->birth_year == std::get<uint16_t>(year);
+        return account.birth_year == std::get<uint16_t>(year);
     }
 };
