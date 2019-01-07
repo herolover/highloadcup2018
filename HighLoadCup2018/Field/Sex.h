@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
-template<>
-struct FieldQuery<DB::sex_tag>
+#include <string_view>
+
+struct sex
 {
     static auto eq(DB &db, const std::string_view &value)
     {

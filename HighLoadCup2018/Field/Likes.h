@@ -1,14 +1,16 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
 #include "../Split.h"
+#include "../IntersectionIter.h"
 
 #include <charconv>
 #include <algorithm>
+#include <string_view>
+#include <utility>
 
-template<>
-struct FieldQuery<DB::like_tag>
+struct likes
 {
     static auto contains(DB &db, const std::string_view &value)
     {

@@ -1,9 +1,11 @@
-#pragma once
+п»ї#pragma once
 
 #include "Account.h"
 
 #include <ctime>
-#include <string>
+#include <string_view>
+
+using namespace std::literals;
 
 inline uint16_t get_year(std::time_t timestamp)
 {
@@ -18,11 +20,11 @@ inline bool is_male(const std::string_view &value)
 
 inline Account::Status convert_account_status(const std::string_view &value)
 {
-    if (value == u8"свободны")
+    if (value == u8"СЃРІРѕР±РѕРґРЅС‹"sv)
     {
         return Account::Status::FREE;
     }
-    else if (value == u8"заняты")
+    else if (value == u8"Р·Р°РЅСЏС‚С‹"sv)
     {
         return Account::Status::BUSY;
     }

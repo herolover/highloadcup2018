@@ -7,10 +7,15 @@
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+
+#include <boost/fusion/include/mpl.hpp>
+#include <boost/fusion/include/vector.hpp>
 
 #include <set>
 #include <map>
 #include <algorithm>
+#include <optional>
 
 namespace mi = boost::multi_index;
 
@@ -37,9 +42,9 @@ struct DB
     // *INDENT-OFF*
     mi::multi_index_container<Account,
         mi::indexed_by<
-            mi::ordered_unique<
-                mi::tag<id_tag>,
-                mi::member<Account, uint32_t, &Account::id>
+            mi::random_access<
+                mi::tag<id_tag>
+                //mi::member<Account, uint32_t, &Account::id>
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
@@ -119,14 +124,9 @@ struct DB
         {
         }
 
-        const uint32_t &get_id()
+        auto &operator*() const
         {
-            return _it->id;
-        }
-
-        const Account::email_t &get_email()
-        {
-            return _it->email;
+            return *_it;
         }
 
         AccountReference(const AccountReference &) = default;
@@ -158,7 +158,7 @@ struct DB
 
     void add_account(Account &&new_account)
     {
-        account.insert(std::move(new_account));
+        account.insert(account.end(), std::move(new_account));
     }
 
     void build_indicies()

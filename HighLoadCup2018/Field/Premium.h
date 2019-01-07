@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
-template<>
-struct FieldQuery<DB::premium_tag>
+#include <string_view>
+#include <ctime>
+
+struct premium
 {
     static auto now(DB &db, const std::string_view &value)
     {

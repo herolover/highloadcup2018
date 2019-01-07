@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
-template<>
-struct FieldQuery<DB::phone_tag>
+#include <string_view>
+
+struct phone
 {
     static auto code(DB &db, const std::string_view &value)
     {

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
-template<>
-struct FieldQuery<DB::email_tag>
+#include <string_view>
+
+struct email
 {
     static auto domain(DB &db, const std::string_view &value)
     {

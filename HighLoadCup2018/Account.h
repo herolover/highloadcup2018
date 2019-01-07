@@ -14,12 +14,12 @@ struct Like
 
 struct Account
 {
-    using email_t = typename shared_string<0>;
-    using first_name_t = typename shared_string<1>;
-    using second_name_t = typename shared_string<2>;
-    using country_t = typename shared_string<3>;
-    using city_t = typename shared_string<4>;
-    using interest_t = typename shared_string<5>;
+    using email_t = shared_string<0>;
+    using first_name_t = shared_string<1>;
+    using second_name_t = shared_string<2>;
+    using country_t = shared_string<3>;
+    using city_t = shared_string<4>;
+    using interest_t = shared_string<5>;
 
     enum class Status : uint8_t
     {
@@ -46,16 +46,6 @@ struct Account
     int32_t premium_start = 0;
     int32_t premium_finish = 0;
     std::vector<uint32_t> like;
-
-    uint32_t &get_id()
-    {
-        return id;
-    }
-
-    email_t &get_email()
-    {
-        return email;
-    }
 
     bool operator<(const Account &a) const
     {

@@ -70,7 +70,7 @@ template<int ID>
 class shared_string
 {
 public:
-    using Type = typename shared_string<ID>;
+    using Type = shared_string<ID>;
 
     shared_string() = default;
     shared_string(const shared_string &) = default;
@@ -113,9 +113,19 @@ public:
         return _value.get();
     }
 
+    bool operator==(nullptr_t) const
+    {
+        return _value == nullptr;
+    }
+
     bool operator!=(nullptr_t) const
     {
         return _value != nullptr;
+    }
+
+    bool operator==(const std::string_view &value) const
+    {
+        return std::string_view(_value->c_str(), _value->size()) == value;
     }
 
     static std::size_t size()

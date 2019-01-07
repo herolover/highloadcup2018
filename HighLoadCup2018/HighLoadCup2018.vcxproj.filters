@@ -13,8 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\FieldQuery">
-      <UniqueIdentifier>{ec510c01-93d2-4819-85fc-9f3e592a1aff}</UniqueIdentifier>
+    <Filter Include="Header Files\RequestHandler">
+      <UniqueIdentifier>{7a3ab235-1aaf-4445-bd48-fa85252f8131}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Field">
+      <UniqueIdentifier>{a2913b89-ef86-4c31-982f-4eb1f2f2a438}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,26 +38,8 @@
     <ClInclude Include="DBLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FieldQuery.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\FirstName.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Sex.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Email.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Status.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
     <ClInclude Include="Split.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\SecondName.h">
-      <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
     <ClInclude Include="HandlerIter.h">
       <Filter>Header Files</Filter>
@@ -62,29 +47,8 @@
     <ClInclude Include="SharedString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FieldQuery\Phone.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Country.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\City.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Birth.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
     <ClInclude Include="Convert.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Premium.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Interest.h">
-      <Filter>Header Files\FieldQuery</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldQuery\Like.h">
-      <Filter>Header Files\FieldQuery</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
@@ -93,6 +57,63 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IntersectionIter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpRequestParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UrlDecoding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestHandler\FilterAccounts.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Birth.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\City.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Country.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Email.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\FirstName.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Interests.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Likes.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Phone.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Premium.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\SecondName.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Sex.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Status.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldMethod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldMethodTrait.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

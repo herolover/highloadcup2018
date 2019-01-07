@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../FieldQuery.h"
+#include "../DB.h"
 
 #include "../UnionIter.h"
 #include "../Common.h"
 #include "../Split.h"
 
-template<>
-struct FieldQuery<DB::first_name_tag>
+#include <string_view>
+
+struct first_name
 {
     static auto eq(DB &db, const std::string_view &value)
     {
