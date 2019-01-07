@@ -29,7 +29,7 @@ struct Account
     };
 
     uint32_t id;
-    email_t email;
+    std::string email;
     std::string email_domain;
     first_name_t first_name;
     second_name_t second_name;

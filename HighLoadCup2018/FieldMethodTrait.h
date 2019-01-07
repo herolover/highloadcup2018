@@ -4,6 +4,8 @@
 #include "DB.h"
 #include "Common.h"
 
+#include <rapidjson/document.h>
+
 #include <charconv>
 #include <string_view>
 
@@ -44,5 +46,14 @@ struct t_value<F, m_null>
     Value operator()(const std::string_view &value) const
     {
         return value[0] == '1';
+    }
+};
+
+template<class F>
+struct t_get_json_value
+{
+    rapidjson::Value operator()(const Account &account) const
+    {
+        return rapidjson::Value(rapidjson::StringRef(""));
     }
 };

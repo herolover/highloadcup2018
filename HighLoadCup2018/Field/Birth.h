@@ -3,6 +3,15 @@
 #include "../FieldMethodTrait.h"
 
 template<>
+struct t_get_json_value<f_birth>
+{
+    rapidjson::Value operator()(const Account &account) const
+    {
+        return rapidjson::Value(account.birth);
+    }
+};
+
+template<>
 struct t_value<f_birth, m_lt>
 {
     Value operator()(const std::string_view &value)

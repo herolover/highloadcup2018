@@ -7,6 +7,15 @@
 #include <algorithm>
 
 template<>
+struct t_get_json_value<f_city>
+{
+    rapidjson::Value operator()(const Account &account) const
+    {
+        return rapidjson::Value(rapidjson::StringRef(*account.city));
+    }
+};
+
+template<>
 struct t_value<f_city, m_any>
 {
     Value operator()(const std::string_view &value) const

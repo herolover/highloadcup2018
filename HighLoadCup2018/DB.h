@@ -48,7 +48,7 @@ struct DB
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
-                mi::member<Account, Account::email_t, &Account::email>,
+                mi::member<Account, std::string, &Account::email>,
                 string_view_compare
             >,
             mi::ordered_non_unique<

@@ -13,9 +13,14 @@ inline uint16_t get_year(std::time_t timestamp)
     return time->tm_year + 1900;
 }
 
-inline bool is_male(const std::string_view &value)
+inline bool convert_sex(const std::string_view &value)
 {
     return value[0] == 'm';
+}
+
+inline std::string_view convert_sex(bool is_male)
+{
+    return is_male ? "m"sv : "f"sv;
 }
 
 inline Account::Status convert_account_status(const std::string_view &value)
@@ -31,5 +36,20 @@ inline Account::Status convert_account_status(const std::string_view &value)
     else
     {
         return Account::Status::COMPLICATED;
+    }
+}
+
+inline std::string_view convert_account_status(Account::Status status)
+{
+    switch (status)
+    {
+    case Account::Status::FREE:
+        return u8"свободны"sv;
+    case Account::Status::BUSY:
+        return u8"заняты"sv;
+    case Account::Status::COMPLICATED:
+        return u8"всё сложно"sv;
+    default:
+        return ""sv;
     }
 }

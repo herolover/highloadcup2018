@@ -97,7 +97,7 @@ public:
         break;
         case State::EMAIL:
             account.email = value;
-            account.email_domain = account.email->substr(account.email->find('@') + 1);
+            account.email_domain = account.email.substr(account.email.find('@') + 1);
             state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
@@ -114,7 +114,7 @@ public:
             state = State::ACCOUNT_KEY;
             break;
         case State::SEX:
-            account.is_male = is_male(value);
+            account.is_male = convert_sex(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:

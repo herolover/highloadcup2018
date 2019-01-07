@@ -2,7 +2,14 @@
 
 #include "../RequestHandler.h"
 
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+
 #include <algorithm>
+
+namespace rj = rapidjson;
 
 template<>
 struct RequestHandler<FilterAccounts>
@@ -58,15 +65,42 @@ struct RequestHandler<FilterAccounts>
 
                 std::sort(id_list.begin(), id_list.end(), std::greater<int>());
 
+                rj::Document document;
+                rj::Value account_array(rj::kArrayType);
                 for (auto &id : id_list)
                 {
                     auto &account = db.account.get<DB::id_tag>()[id - 1];
-                    response.body() += std::to_string(account.id) + " " + (account.first_name ? *account.first_name : "null") + " " + std::to_string(account.birth_year) + " " + (account.city ? *account.city : "null") + "\n";
-                }
-            });
 
-            response.result(boost::beast::http::status::ok);
-            response.prepare_payload();
+                    rj::Value json_account(rj::kObjectType);
+                    json_account.AddMember("id", id, document.GetAllocator());
+                    json_account.AddMember("email", rj::Value(rj::StringRef(account.email)), document.GetAllocator());
+
+                    for (auto &filter : request.filter)
+                    {
+                        std::visit([&document, &account, &json_account](auto &&field)
+                        {
+                            using field_type = std::decay_t<decltype(field)>;
+                            if (field.name != "id"sv && field.name != "email"sv)
+                            {
+                                json_account.AddMember(rj::StringRef(field.name.data()), t_get_json_value<field_type>()(account), document.GetAllocator());
+                            }
+                        }, filter.field);
+                    }
+
+                    account_array.PushBack(json_account, document.GetAllocator());
+                }
+
+                document.SetObject();
+                document.AddMember("accounts", account_array, document.GetAllocator());
+
+                rj::StringBuffer buffer;
+                rj::Writer writer(buffer);
+                document.Accept(writer);
+
+                response.result(boost::beast::http::status::ok);
+                response.body() = buffer.GetString();
+                response.prepare_payload();
+            });
         });
     }
 };
