@@ -31,7 +31,7 @@ int main()
 
     for (int i = 1; i <= 3; ++i)
     {
-        std::string filename = "accounts_" + std::to_string(i) + ".json";
+        std::string filename = "../data/test_data/data/accounts_" + std::to_string(i) + ".json";
 
         rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
         std::FILE *fp = std::fopen(filename.c_str(), "r");

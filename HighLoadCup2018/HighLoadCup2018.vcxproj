@@ -78,6 +78,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0600;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_USE_32BIT_TIME_T;BOOST_COROUTINES_NO_DEPRECATION_WARNING;BOOST_ASIO_NO_DEPRECATED;WIN32_LEAN_AND_MEAN;BOOST_ASIO_HEADER_ONLY;RAPIDJSON_HAS_STDSTRING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
@@ -91,6 +92,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0600;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_USE_32BIT_TIME_T;BOOST_COROUTINES_NO_DEPRECATION_WARNING;BOOST_ASIO_NO_DEPRECATED;WIN32_LEAN_AND_MEAN;BOOST_ASIO_HEADER_ONLY;RAPIDJSON_HAS_STDSTRING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
@@ -106,6 +108,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0600;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_USE_32BIT_TIME_T;BOOST_COROUTINES_NO_DEPRECATION_WARNING;BOOST_ASIO_NO_DEPRECATED;WIN32_LEAN_AND_MEAN;BOOST_ASIO_HEADER_ONLY;RAPIDJSON_HAS_STDSTRING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -123,6 +126,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_WIN32_WINNT=0x0600;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_USE_32BIT_TIME_T;BOOST_COROUTINES_NO_DEPRECATION_WARNING;BOOST_ASIO_NO_DEPRECATED;WIN32_LEAN_AND_MEAN;BOOST_ASIO_HEADER_ONLY;RAPIDJSON_HAS_STDSTRING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

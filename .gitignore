@@ -5,5 +5,5 @@ Release/
 x64/
 accounts_*.json
 *.vcxproj.user
-data
-TestRealData/
+data/
+yandex_tank/

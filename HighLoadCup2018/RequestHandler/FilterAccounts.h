@@ -27,6 +27,7 @@ struct RequestHandler<FilterAccounts>
             {
                 return field.priority;
             }, b.field);
+
             return a_priority < b_priority;
         });
 
