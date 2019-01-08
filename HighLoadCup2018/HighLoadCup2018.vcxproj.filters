@@ -116,5 +116,8 @@
     <ClInclude Include="FieldMethodTrait.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Field\ID.h">
+      <Filter>Header Files\Field</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

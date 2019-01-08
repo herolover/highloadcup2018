@@ -151,6 +151,7 @@
     <ClInclude Include="Field\Country.h" />
     <ClInclude Include="Field\Email.h" />
     <ClInclude Include="Field\FirstName.h" />
+    <ClInclude Include="Field\ID.h" />
     <ClInclude Include="Field\Interests.h" />
     <ClInclude Include="Field\Likes.h" />
     <ClInclude Include="Field\Phone.h" />
