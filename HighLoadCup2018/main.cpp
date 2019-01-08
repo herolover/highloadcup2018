@@ -18,6 +18,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string_view>
+#include <thread>
 
 #include <rapidjson/filereadstream.h>
 
@@ -58,7 +59,30 @@ int main()
         }, parsed_request);
     });
 
+    auto t1 = std::thread([&io_context]()
+    {
+        io_context.run();
+
+        std::cout << "thread 1 finished" << std::endl;
+    });
+    auto t2 = std::thread([&io_context]()
+    {
+        io_context.run();
+
+        std::cout << "thread 2 finished" << std::endl;
+    });
+    auto t3 = std::thread([&io_context]()
+    {
+        io_context.run();
+
+        std::cout << "thread 3 finished" << std::endl;
+    });
+
     io_context.run();
+
+    t3.join();
+    t2.join();
+    t1.join();
 
     return 0;
 }
