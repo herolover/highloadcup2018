@@ -6,6 +6,7 @@
 #include "HttpServer.h"
 
 #include "RequestHandler.h"
+#include "RequestHandler/BadRequest.h"
 #include "RequestHandler/FilterAccounts.h"
 
 #include "PerformanceTimer.h"
@@ -29,9 +30,9 @@ int main()
 
     PerformanceTimer timer;
 
-    for (int i = 1; i <= 3; ++i)
+    for (int i = 1; i <= 130; ++i)
     {
-        std::string filename = "../data/test_data_1/data/accounts_" + std::to_string(i) + ".json";
+        std::string filename = "../data/real_data/data/accounts_" + std::to_string(i) + ".json";
 
         rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
         std::FILE *fp = std::fopen(filename.c_str(), "r");

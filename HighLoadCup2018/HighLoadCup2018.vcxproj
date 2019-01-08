@@ -163,6 +163,7 @@
     <ClInclude Include="HttpServer.h" />
     <ClInclude Include="IntersectionIter.h" />
     <ClInclude Include="RequestHandler.h" />
+    <ClInclude Include="RequestHandler\BadRequest.h" />
     <ClInclude Include="RequestHandler\FilterAccounts.h" />
     <ClInclude Include="SharedString.h" />
     <ClInclude Include="HandlerIter.h" />

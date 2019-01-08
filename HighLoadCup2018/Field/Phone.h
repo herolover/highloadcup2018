@@ -2,6 +2,12 @@
 
 #include "../FieldMethodTrait.h"
 
+template<class M>
+struct t_has_method<f_phone, M>
+{
+    constexpr static bool value = boost::mp11::mp_contains<boost::mp11::mp_list<m_code, m_null>, M>::value;
+};
+
 template<>
 struct t_get_json_value<f_phone>
 {

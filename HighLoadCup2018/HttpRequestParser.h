@@ -93,6 +93,10 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                     {
                         has_limit = true;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else if (key_value[0] != "query_id"sv)
                 {
@@ -104,10 +108,20 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                         auto method = make_method(field_method[1]);
                         if (field.index() != 0 && method.index() != 0)
                         {
-                            auto value = for_field_method(field, method, [&key_value](auto &&field, auto &&method)
+                            auto value = for_field_method(field, method, [&key_value, &is_valid](auto &&field, auto &&method)
                             {
-                                return t_value<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(key_value[1]);
+                                using field_type = std::decay_t<decltype(field)>;
+                                using method_type = std::decay_t<decltype(method)>;
+
+                                is_valid = t_has_method<field_type, method_type>::value;
+
+                                return t_value<field_type, method_type>()(key_value[1]);
                             });
+
+                            if (!is_valid)
+                            {
+                                break;
+                            }
 
                             filter_accounts.filter.push_back(FilterAccounts::Filter{std::move(field), std::move(method), std::move(value)});
                         }

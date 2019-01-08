@@ -3,6 +3,12 @@
 #include "../FieldMethodTrait.h"
 #include "../HandlerIter.h"
 
+template<class M>
+struct t_has_method<f_second_name, M>
+{
+    constexpr static bool value = boost::mp11::mp_contains<boost::mp11::mp_list<m_eq, m_starts, m_null>, M>::value;
+};
+
 template<>
 struct t_get_json_value<f_second_name>
 {

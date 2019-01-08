@@ -6,10 +6,18 @@
 
 #include <rapidjson/document.h>
 
+#include <boost/mp11.hpp>
+
 #include <charconv>
 #include <string_view>
 
 using namespace std::literals;
+
+template<class F, class M>
+struct t_has_method
+{
+    constexpr static bool value = false;
+};
 
 template<class F>
 struct t_get_json_value

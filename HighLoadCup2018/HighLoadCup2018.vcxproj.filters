@@ -119,5 +119,8 @@
     <ClInclude Include="Field\ID.h">
       <Filter>Header Files\Field</Filter>
     </ClInclude>
+    <ClInclude Include="RequestHandler\BadRequest.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

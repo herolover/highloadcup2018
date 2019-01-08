@@ -7,6 +7,12 @@
 
 #include <algorithm>
 
+template<class M>
+struct t_has_method<f_interests, M>
+{
+    constexpr static bool value = boost::mp11::mp_contains<boost::mp11::mp_list<m_contains, m_any>, M>::value;
+};
+
 template<>
 struct t_value<f_interests, m_contains>
 {

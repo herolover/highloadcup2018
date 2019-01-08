@@ -7,6 +7,12 @@
 #include <charconv>
 #include <algorithm>
 
+template<class M>
+struct t_has_method<f_likes, M>
+{
+    constexpr static bool value = boost::mp11::mp_contains<boost::mp11::mp_list<m_contains>, M>::value;
+};
+
 template<>
 struct t_value<f_likes, m_contains>
 {
