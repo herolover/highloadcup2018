@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../FieldMethodTrait.h"
-#include "../HandlerIter.h"
+#include "../UnionIter.h"
 #include "../Convert.h"
 
 template<class M>
@@ -53,16 +53,25 @@ struct t_select<f_status, m_neq>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
+        auto status = std::get<Account::Status>(value);
         auto &index = db.account.get<DB::status_tag>();
-        auto ignore_range = index.equal_range(std::get<Account::Status>(value));
 
-        handler(std::make_pair(handler_iter(index.begin(), [ignore_range = std::move(ignore_range)](auto &it)
+        using IterType = decltype(index.rbegin());
+        std::vector<std::pair<IterType, IterType>> range_list;
+        if (status != Account::Status::BUSY)
         {
-            if (it == ignore_range.first)
-            {
-                it = ignore_range.second;
-            }
-        }), index.end()));
+            range_list.emplace_back(make_reverse_range(index.equal_range(Account::Status::BUSY)));
+        }
+        if (status != Account::Status::COMPLICATED)
+        {
+            range_list.emplace_back(make_reverse_range(index.equal_range(Account::Status::COMPLICATED)));
+        }
+        if (status != Account::Status::FREE)
+        {
+            range_list.emplace_back(make_reverse_range(index.equal_range(Account::Status::FREE)));
+        }
+
+        handler(std::make_pair(union_iter<true, IterType>(range_list), union_iter<true, IterType>(range_list, true)));
     }
 };
 
