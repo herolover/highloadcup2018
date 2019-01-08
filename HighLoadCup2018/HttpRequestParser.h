@@ -88,8 +88,11 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
 
                 if (key_value[0] == "limit"sv)
                 {
-                    has_limit = true;
-                    std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), filter_accounts.limit);
+                    auto [p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), filter_accounts.limit);
+                    if (ec == std::errc())
+                    {
+                        has_limit = true;
+                    }
                 }
                 else if (key_value[0] != "query_id"sv)
                 {
