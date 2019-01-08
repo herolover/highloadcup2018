@@ -51,11 +51,11 @@ public:
 private:
     void next_iter()
     {
-        _current_range_it = std::min_element(_range_list.begin(), _range_list.end(), [](auto &left_it, auto &right_it)
+        _current_range_it = std::min_element(_range_list.begin(), _range_list.end(), [](auto &&left_it, auto &&right_it)
         {
             if constexpr(ReverseOrder)
             {
-                return left_it.first != left_it.second && (right_it.first == right_it.second || !(*left_it.first < *right_it.first));
+                return left_it.first != left_it.second && (right_it.first == right_it.second || *right_it.first < *left_it.first);
             }
             else
             {
