@@ -123,9 +123,9 @@ struct DB
         {
         }
 
-        const uint32_t &get_id() const
+        const Account &account() const
         {
-            return _it->id;
+            return *_it;
         }
 
         auto &operator*() const

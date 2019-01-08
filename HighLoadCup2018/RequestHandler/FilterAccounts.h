@@ -7,6 +7,8 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include <boost/mp11.hpp>
+
 #include <algorithm>
 
 namespace rj = rapidjson;
@@ -67,90 +69,73 @@ struct RequestHandler<FilterAccounts>
         }
     };
 
+    template<class BeginIt, class EndIt>
+    static void filter(const FilterAccounts &request, HttpServer::HttpResponse &response, BeginIt &&begin, EndIt &&end)
+    {
+        JSONResult result(request);
+        std::size_t counter = 0;
+        for (; begin != end && counter < request.limit; ++begin)
+        {
+            auto &account = begin->account();
+
+            bool is_suitable = true;
+            for (auto &filter : request.filter)
+            {
+                bool check_result = for_field_method(filter.field, filter.method, [&account, &filter](auto &&field, auto &&method)
+                {
+                    return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
+                });
+
+                if (!check_result)
+                {
+                    is_suitable = false;
+                    break;
+                }
+            }
+            if (is_suitable)
+            {
+                ++counter;
+                result.add_account(account);
+            }
+        }
+
+        response.result(boost::beast::http::status::ok);
+        response.body() = result.get_json();
+        response.prepare_payload();
+    }
+
     static void handle(DB &db, const FilterAccounts &request, HttpServer::HttpResponse &response)
     {
-        if (!request.filter.empty())
+        using dont_select_by_method = boost::mp11::mp_list<m_lt, m_gt, m_starts, m_now, m_neq>;
+
+        auto select_by_filter_it = request.filter.begin();
+        for (; select_by_filter_it != request.filter.end(); ++select_by_filter_it)
         {
-            auto index_by_field_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
+            bool is_suitable = std::visit([](auto &&method)
             {
-                auto a_priority = std::visit([](auto &&field)
-                {
-                    return field.priority;
-                }, a.field);
+                return !boost::mp11::mp_contains<dont_select_by_method, std::decay_t<decltype(method)>>::value;
+            }, select_by_filter_it->method);
 
-                auto b_priority = std::visit([](auto &&field)
-                {
-                    return field.priority;
-                }, b.field);
-
-                return a_priority < b_priority;
-            });
-
-            for_field_method(index_by_field_it->field, index_by_field_it->method, [&db, &request, &response, &index_by_field_it](auto &&field, auto &&method)
+            if (is_suitable)
             {
-                t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, index_by_field_it->value, [&db, &request, &response, &index_by_field_it](auto &&range)
+                break;
+            }
+        }
+
+        if (select_by_filter_it != request.filter.end())
+        {
+            for_field_method(select_by_filter_it->field, select_by_filter_it->method, [&db, &request, &response, &select_by_filter_it](auto &&field, auto &&method)
+            {
+                t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, select_by_filter_it->value, [&db, &request, &response](auto &&range)
                 {
-                    std::vector<uint32_t> id_list;
-                    // TODO if range is already sorted, count limit here
-                    for (auto &it = range.first; it != range.second; ++it)
-                    {
-                        id_list.push_back(it->get_id());
-                    }
-
-                    // TODO replace by partial sort
-                    std::sort(id_list.begin(), id_list.end(), std::greater<int>());
-
-                    JSONResult result(request);
-                    std::size_t counter = 0;
-                    for (std::size_t i = 0; i < id_list.size() && counter < request.limit; ++i)
-                    {
-                        auto &id = id_list[i];
-                        auto &id_index = db.account.get<DB::id_tag>();
-                        auto &account = id_index[id - id_index.front().id];
-
-                        bool is_suitable = true;
-                        for (auto filter_it = request.filter.begin(); filter_it != request.filter.end(); ++filter_it)
-                        {
-                            if (filter_it != index_by_field_it)
-                            {
-                                bool check_result = for_field_method(filter_it->field, filter_it->method, [&account, &filter_it](auto &&field, auto &&method)
-                                {
-                                    return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter_it->value);
-                                });
-
-                                if (!check_result)
-                                {
-                                    is_suitable = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (is_suitable)
-                        {
-                            ++counter;
-                            result.add_account(account);
-                        }
-                    }
-
-                    response.result(boost::beast::http::status::ok);
-                    response.body() = result.get_json();
-                    response.prepare_payload();
+                    filter(request, response, range.first, range.second);
                 });
             });
         }
         else
         {
-            JSONResult result(request);
             auto &index = db.account.get<DB::id_tag>();
-            std::size_t counter = 0;
-            for (auto it = index.rbegin(); it != index.rend() && counter < request.limit; ++it, ++counter)
-            {
-                result.add_account(*it);
-            }
-
-            response.result(boost::beast::http::status::ok);
-            response.body() = result.get_json();
-            response.prepare_payload();
+            filter(request, response, index.rbegin(), index.rend());
         }
     }
 };

@@ -47,9 +47,9 @@ struct Account
     int32_t premium_finish = 0;
     std::vector<uint32_t> like;
 
-    const uint32_t &get_id() const
+    const Account &account() const
     {
-        return id;
+        return *this;
     }
 
     bool operator<(const Account &a) const
