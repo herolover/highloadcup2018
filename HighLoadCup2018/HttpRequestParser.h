@@ -176,15 +176,15 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                     for (auto &key : split(key_value[1]))
                     {
                         auto field = make_field(key);
-                        if (field.index() != 0)
+                        is_valid = std::visit([](auto &&field)
                         {
-                            group_accounts.key.push_back(std::move(field));
-                        }
-                        else
+                            return boost::mp11::mp_contains<boost::mp11::mp_list<f_sex, f_status, f_interests, f_country, f_city>, std::decay_t<decltype(field)>>::value;
+                        }, field);
+                        if (!is_valid)
                         {
-                            is_valid = false;
                             break;
                         }
+                        group_accounts.key.push_back(std::move(field));
                     }
 
                     if (!is_valid)

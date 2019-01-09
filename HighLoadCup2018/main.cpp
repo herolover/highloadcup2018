@@ -8,6 +8,7 @@
 #include "RequestHandler.h"
 #include "RequestHandler/BadRequest.h"
 #include "RequestHandler/FilterAccounts.h"
+#include "RequestHandler/GroupAccounts.h"
 
 #include "PerformanceTimer.h"
 

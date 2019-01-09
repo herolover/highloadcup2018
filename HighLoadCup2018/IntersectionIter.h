@@ -23,7 +23,7 @@ public:
             next_iter();
         }
     }
-
+    intersection_iter(const intersection_iter &) = default;
     intersection_iter(intersection_iter &&) = default;
 
     auto operator*() const

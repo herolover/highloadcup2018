@@ -11,6 +11,9 @@ public:
         _handler(_it);
     }
 
+    handler_iter(const handler_iter &) = default;
+    handler_iter(handler_iter &&) = default;
+
     auto operator*() const
     {
         return *_it;

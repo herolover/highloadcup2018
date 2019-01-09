@@ -7,91 +7,76 @@ using namespace std::literals;
 
 struct invalid
 {
-    constexpr static int priority = 0;
     constexpr static std::string_view name = ""sv;
 };
 
 struct f_id
 {
-    constexpr static int priority = 0;
     constexpr static std::string_view name = "id"sv;
 };
 
 struct f_sex
 {
-    constexpr static int priority = 100;
     constexpr static std::string_view name = "sex"sv;
 };
 
 struct f_email
 {
-    constexpr static int priority = 50;
     constexpr static std::string_view name = "email"sv;
 };
 
 struct f_status
 {
-    constexpr static int priority = 99;
     constexpr static std::string_view name = "status"sv;
 };
 
 struct f_first_name
 {
-    constexpr static int priority = 20;
     constexpr static std::string_view name = "fname"sv;
 };
 
 struct f_second_name
 {
-    constexpr static int priority = 4;
     constexpr static std::string_view name = "sname"sv;
 };
 
 struct f_phone
 {
-    constexpr static int priority = 4;
     constexpr static std::string_view name = "phone"sv;
 };
 
 struct f_country
 {
-    constexpr static int priority = 5;
     constexpr static std::string_view name = "country"sv;
 };
 
 struct f_city
 {
-    constexpr static int priority = 4;
     constexpr static std::string_view name = "city"sv;
 };
 
 struct f_birth
 {
-    constexpr static int priority = 10;
     constexpr static std::string_view name = "birth"sv;
 };
 
 struct f_joined
 {
-    constexpr static int priority = 10;
     constexpr static std::string_view name = "joined"sv;
 };
 
 struct f_interests
 {
-    constexpr static int priority = 2;
     constexpr static std::string_view name = "interests"sv;
 };
 
 struct f_likes
 {
-    constexpr static int priority = 1;
     constexpr static std::string_view name = "likes"sv;
 };
 
 struct f_premium
 {
-    constexpr static int priority = 3;
     constexpr static std::string_view name = "premium"sv;
 };
 

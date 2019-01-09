@@ -22,7 +22,7 @@ public:
             next_iter();
         }
     }
-
+    union_iter(const union_iter &) = default;
     union_iter(union_iter &&) = default;
 
     auto operator*() const
