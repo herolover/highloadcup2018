@@ -10,6 +10,7 @@
 #include "Field/Email.h"
 #include "Field/FirstName.h"
 #include "Field/Interests.h"
+#include "Field/Joined.h"
 #include "Field/Likes.h"
 #include "Field/Phone.h"
 #include "Field/Premium.h"
@@ -50,11 +51,15 @@ struct GroupAccounts
 struct RecommendForAccount
 {
     uint32_t account_id;
+    std::vector<Filter> filter;
+    uint8_t limit;
 };
 
 struct SuggestForAccount
 {
     uint32_t account_id;
+    std::vector<Filter> filter;
+    uint8_t limit;
 };
 
 struct AddAccount
@@ -83,7 +88,7 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
     auto target_parts = split(std::string_view(decoded_target.data() + 1, decoded_target.size() - 1), '/');
     if (target_parts[0] == "accounts"sv)
     {
-        if (target_parts[1] == "filter"sv && target_parts.size() == 3 && target_parts[2][0] == '?')
+        if (target_parts[1] == "filter"sv && target_parts.size() == 3)
         {
             bool is_valid = true;
             bool has_limit = false;
@@ -155,7 +160,7 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                 std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
             }
         }
-        else if (target_parts[1] == "group"sv && target_parts.size() == 3 && target_parts[2][0] == '?')
+        else if (target_parts[1] == "group"sv && target_parts.size() == 3)
         {
             bool is_valid = true;
             bool has_keys = false;
@@ -257,6 +262,12 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
             {
                 std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
             }
+        }
+        else if (target_parts[2] == "recommend"sv && target_parts.size() == 4)
+        {
+        }
+        else if (target_parts[3] == "suggest"sv && target_parts.size() == 4)
+        {
         }
     }
 
