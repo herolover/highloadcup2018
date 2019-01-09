@@ -208,6 +208,7 @@ public:
             break;
         case State::JOINED:
             account.joined = value;
+            account.joined_year = get_year(value);
             state = State::ACCOUNT_KEY;
             break;
         case State::PREMIUM_START:

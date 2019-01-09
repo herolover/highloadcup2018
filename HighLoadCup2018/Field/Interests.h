@@ -38,6 +38,17 @@ struct t_value<f_interests, m_any>
 };
 
 template<>
+struct t_select<f_interests, m_eq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        auto &account_list = db.interest[std::get<std::string_view>(value)];
+        handler(std::make_pair(account_list.rbegin(), account_list.rend()));
+    }
+};
+
+template<>
 struct t_select<f_interests, m_contains>
 {
     template<class Handler>

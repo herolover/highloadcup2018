@@ -151,8 +151,8 @@
     <ClInclude Include="Field\Country.h" />
     <ClInclude Include="Field\Email.h" />
     <ClInclude Include="Field\FirstName.h" />
-    <ClInclude Include="Field\ID.h" />
     <ClInclude Include="Field\Interests.h" />
+    <ClInclude Include="Field\Joined.h" />
     <ClInclude Include="Field\Likes.h" />
     <ClInclude Include="Field\Phone.h" />
     <ClInclude Include="Field\Premium.h" />
@@ -165,6 +165,7 @@
     <ClInclude Include="RequestHandler.h" />
     <ClInclude Include="RequestHandler\BadRequest.h" />
     <ClInclude Include="RequestHandler\FilterAccounts.h" />
+    <ClInclude Include="RequestHandler\GroupAccounts.h" />
     <ClInclude Include="SharedString.h" />
     <ClInclude Include="HandlerIter.h" />
     <ClInclude Include="DB.h" />

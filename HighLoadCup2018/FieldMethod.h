@@ -71,6 +71,12 @@ struct f_birth
     constexpr static std::string_view name = "birth"sv;
 };
 
+struct f_joined
+{
+    constexpr static int priority = 10;
+    constexpr static std::string_view name = "joined"sv;
+};
+
 struct f_interests
 {
     constexpr static int priority = 2;
@@ -116,6 +122,7 @@ using Field = std::variant<
     f_country,
     f_city,
     f_birth,
+    f_joined,
     f_interests,
     f_likes,
     f_premium>;
@@ -173,6 +180,10 @@ inline Field make_field(const std::string_view &field_name)
     else if (field_name == "interests"sv)
     {
         field = f_interests();
+    }
+    else if (field_name == "joined"sv)
+    {
+        field = f_joined();
     }
     else if (field_name == "likes"sv)
     {

@@ -41,6 +41,7 @@ struct Account
     country_t country;
     city_t city;
     int32_t joined;
+    uint16_t joined_year;
     Status status;
     std::vector<interest_t> interest;
     int32_t premium_start = 0;

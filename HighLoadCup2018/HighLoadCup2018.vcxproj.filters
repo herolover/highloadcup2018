@@ -116,11 +116,14 @@
     <ClInclude Include="FieldMethodTrait.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Field\ID.h">
-      <Filter>Header Files\Field</Filter>
-    </ClInclude>
     <ClInclude Include="RequestHandler\BadRequest.h">
       <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestHandler\GroupAccounts.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="Field\Joined.h">
+      <Filter>Header Files\Field</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

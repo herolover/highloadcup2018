@@ -18,6 +18,16 @@ struct t_get_json_value<f_email>
 };
 
 template<>
+struct t_select<f_email, m_eq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        handler(make_reverse_range(db.account.get<DB::email_tag>().equal_range(std::get<std::string_view>(value))));
+    }
+};
+
+template<>
 struct t_select<f_email, m_domain>
 {
     template<class Handler>

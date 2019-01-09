@@ -20,7 +20,7 @@ struct t_get_json_value<f_birth>
 template<>
 struct t_value<f_birth, m_lt>
 {
-    Value operator()(const std::string_view &value)
+    Value operator()(const std::string_view &value) const
     {
         int32_t date = 0;
         std::from_chars(value.data(), value.data() + value.size(), date);
@@ -32,7 +32,7 @@ struct t_value<f_birth, m_lt>
 template<>
 struct t_value<f_birth, m_gt>
 {
-    Value operator()(const std::string_view &value)
+    Value operator()(const std::string_view &value) const
     {
         int32_t date = 0;
         std::from_chars(value.data(), value.data() + value.size(), date);
@@ -44,7 +44,7 @@ struct t_value<f_birth, m_gt>
 template<>
 struct t_value<f_birth, m_year>
 {
-    Value operator()(const std::string_view &value)
+    Value operator()(const std::string_view &value) const
     {
         uint16_t year = 0;
         std::from_chars(value.data(), value.data() + value.size(), year);

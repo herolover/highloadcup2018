@@ -14,6 +14,18 @@ struct t_has_method<f_likes, M>
 };
 
 template<>
+struct t_value<f_likes, m_eq>
+{
+    Value operator()(const std::string_view &value) const
+    {
+        uint32_t id = 0;
+        std::from_chars(value.data(), value.data() + value.size(), id);
+
+        return id;
+    }
+};
+
+template<>
 struct t_value<f_likes, m_contains>
 {
     Value operator()(const std::string_view &value) const
@@ -30,6 +42,17 @@ struct t_value<f_likes, m_contains>
         std::sort(id_list.begin(), id_list.end());
 
         return std::move(id_list);
+    }
+};
+
+template<>
+struct t_select<f_likes, m_eq>
+{
+    template<class Handler>
+    void operator()(DB &db, const Value &value, Handler &&handler) const
+    {
+        auto &account_list = db.liked_by[std::get<uint32_t>(value)];
+        handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
 

@@ -11,30 +11,28 @@
 
 #include <algorithm>
 
-namespace rj = rapidjson;
-
 template<>
 struct RequestHandler<FilterAccounts>
 {
     struct JSONResult
     {
         const FilterAccounts &request;
-        rj::Document document;
-        rj::Value account_array;
-        rj::StringBuffer buffer;
+        rapidjson::Document document;
+        rapidjson::Value account_array;
+        rapidjson::StringBuffer buffer;
 
         JSONResult(const FilterAccounts &request)
             : request(request)
-            , account_array(rj::kArrayType)
+            , account_array(rapidjson::kArrayType)
         {
             document.SetObject();
         }
 
         void add_account(const Account &account)
         {
-            rj::Value json_account(rj::kObjectType);
+            rapidjson::Value json_account(rapidjson::kObjectType);
             json_account.AddMember("id", account.id, document.GetAllocator());
-            json_account.AddMember("email", rj::Value(rj::StringRef(account.email)), document.GetAllocator());
+            json_account.AddMember("email", rapidjson::Value(rapidjson::StringRef(account.email)), document.GetAllocator());
 
             for (auto &filter : request.filter)
             {
@@ -49,7 +47,7 @@ struct RequestHandler<FilterAccounts>
                         constexpr bool is_method_null = std::is_same_v<m_null, method_type>;
                         if (!(is_method_null && std::get<bool>(filter.value)))
                         {
-                            json_account.AddMember(rj::StringRef(field.name.data()), t_get_json_value<field_type>()(account, document.GetAllocator()), document.GetAllocator());
+                            json_account.AddMember(rapidjson::StringRef(field.name.data()), t_get_json_value<field_type>()(account, document.GetAllocator()), document.GetAllocator());
                         }
                     }
                 });
@@ -62,7 +60,7 @@ struct RequestHandler<FilterAccounts>
         {
             document.AddMember("accounts", std::move(account_array), document.GetAllocator());
 
-            rj::Writer writer(buffer);
+            rapidjson::Writer writer(buffer);
             document.Accept(writer);
 
             return buffer.GetString();

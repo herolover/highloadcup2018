@@ -34,6 +34,7 @@ struct DB
     struct country_tag {};
     struct city_tag {};
     struct joined_tag {};
+    struct joined_year_tag {};
     struct status_tag {};
     struct premium_tag {};
     struct interest_tag {};
@@ -104,6 +105,10 @@ struct DB
             mi::ordered_non_unique<
                 mi::tag<joined_tag>,
                 mi::member<Account, int32_t, &Account::joined>
+            >,
+                mi::ordered_non_unique<
+                mi::tag<joined_year_tag>,
+                mi::member<Account, uint16_t, &Account::joined_year>
             >,
             mi::ordered_non_unique<
                 mi::tag<premium_tag>,
