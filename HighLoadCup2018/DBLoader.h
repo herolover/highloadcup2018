@@ -44,6 +44,7 @@ public:
     DBLoader(DB &db)
         : _db(db)
     {
+        _current_time = std::time(nullptr);
     }
 
     bool String(const char *raw_value, rj::SizeType length, bool)
@@ -249,6 +250,10 @@ public:
     {
         if (state == State::PREMIUM_KEY)
         {
+            if (account.premium_start != 0 && account.premium_finish != 0)
+            {
+                account.premium_status = _current_time > account.premium_start && _current_time < account.premium_finish ? Account::PremiumStatus::ACTIVE : Account::PremiumStatus::EXPIRED;
+            }
             state = State::ACCOUNT_KEY;
         }
         else if (state == State::ACCOUNT_KEY)
@@ -281,4 +286,5 @@ private:
     Account account;
 
     DB &_db;
+    std::time_t _current_time;
 };

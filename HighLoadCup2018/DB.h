@@ -112,7 +112,7 @@ struct DB
             >,
             mi::ordered_non_unique<
                 mi::tag<premium_tag>,
-                mi::member<Account, int32_t, &Account::premium_finish>
+                mi::member<Account, Account::PremiumStatus, &Account::premium_status>
             >
         >
     > account;

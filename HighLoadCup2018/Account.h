@@ -28,6 +28,13 @@ struct Account
         COMPLICATED = 2
     };
 
+    enum class PremiumStatus : uint8_t
+    {
+        NO = 0,
+        EXPIRED = 1,
+        ACTIVE = 2
+    };
+
     uint32_t id;
     std::string email;
     std::string email_domain;
@@ -46,6 +53,7 @@ struct Account
     std::vector<interest_t> interest;
     int32_t premium_start = 0;
     int32_t premium_finish = 0;
+    PremiumStatus premium_status = PremiumStatus::NO;
     std::vector<uint32_t> like;
 
     const Account &account() const
