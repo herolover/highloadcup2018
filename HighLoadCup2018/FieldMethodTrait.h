@@ -31,7 +31,7 @@ struct t_get_json_value
 template<class F, class M>
 struct t_value
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         return value;
     }
@@ -40,7 +40,7 @@ struct t_value
 template<class F>
 struct t_value<F, m_null>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         return value[0] == '1';
     }

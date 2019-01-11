@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DB.h"
 #include "Split.h"
 #include "FieldMethod.h"
 #include "FieldMethodTrait.h"
@@ -51,14 +52,14 @@ struct GroupAccounts
 struct RecommendForAccount
 {
     uint32_t account_id;
-    std::vector<Filter> filter;
+    Filter filter;
     uint8_t limit;
 };
 
 struct SuggestForAccount
 {
     uint32_t account_id;
-    std::vector<Filter> filter;
+    Filter filter;
     uint8_t limit;
 };
 
@@ -81,7 +82,7 @@ struct BadRequest
 
 using ParsedRequest = std::variant<FilterAccounts, GroupAccounts, RecommendForAccount, SuggestForAccount, AddAccount, UpdateAccount, AddLikes, BadRequest>;
 
-inline ParsedRequest parse_http_request(const boost::beast::http::request<boost::beast::http::string_body> &request, const std::string_view &decoded_target)
+inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::request<boost::beast::http::string_body> &request, const std::string_view &decoded_target)
 {
     ParsedRequest result = BadRequest();
 
@@ -120,14 +121,14 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                         auto method = make_method(field_method[1]);
                         if (field.index() != 0 && method.index() != 0)
                         {
-                            auto value = for_field_method(field, method, [&key_value, &is_valid](auto &&field, auto &&method)
+                            auto value = for_field_method(field, method, [&db, &key_value, &is_valid](auto &&field, auto &&method)
                             {
                                 using field_type = std::decay_t<decltype(field)>;
                                 using method_type = std::decay_t<decltype(method)>;
 
                                 is_valid = t_has_method<field_type, method_type>::value;
 
-                                return t_value<field_type, method_type>()(key_value[1]);
+                                return t_value<field_type, method_type>()(db, key_value[1]);
                             });
 
                             if (!is_valid)
@@ -153,7 +154,7 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
 
             if (is_valid && has_limit)
             {
-                result = filter_accounts;
+                result = std::move(filter_accounts);
             }
             else
             {
@@ -230,13 +231,13 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
                     {
                         Method method;
                         Value value;
-                        std::visit([&method, &value, &key_value](auto &&field)
+                        std::visit([&db, &method, &value, &key_value](auto &&field)
                         {
                             using field_type = std::decay_t<decltype(field)>;
                             if constexpr(std::is_same_v<f_birth, field_type> || std::is_same_v<f_joined, field_type>)
                             {
                                 method = m_year();
-                                value = t_value<field_type, m_year>()(key_value[1]);
+                                value = t_value<field_type, m_year>()(db, key_value[1]);
                             }
                             else
                             {
@@ -256,7 +257,7 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
 
             if (is_valid && has_keys && has_order && has_limit)
             {
-                result = group_accounts;
+                result = std::move(group_accounts);
             }
             else
             {
@@ -265,8 +266,51 @@ inline ParsedRequest parse_http_request(const boost::beast::http::request<boost:
         }
         else if (target_parts[2] == "recommend"sv && target_parts.size() == 4)
         {
+            RecommendForAccount recommend_for_account;
+            auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts.size(), recommend_for_account.account_id);
+
+            auto &index = db.account.get<DB::id_tag>();
+            if (ec == std::errc() && recommend_for_account.account_id > 0 && index.find(recommend_for_account.account_id) != index.end())
+            {
+                bool is_valid = true;
+                bool has_limit = false;
+                for (auto &param : split(std::string_view(target_parts[3].data() + 1, target_parts[3].size() - 1), '&'))
+                {
+                    auto key_value = split(param, '=');
+                    if (key_value[0] == "limit"sv)
+                    {
+                        auto[p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), recommend_for_account.limit);
+                        if (ec == std::errc())
+                        {
+                            has_limit = true;
+                        }
+                        else
+                        {
+                            is_valid = false;
+                            break;
+                        }
+                    }
+                    else if (key_value[0] == "country"sv)
+                    {
+                        recommend_for_account.filter.field = f_country();
+                        recommend_for_account.filter.method = m_eq();
+                        recommend_for_account.filter.value = t_value<f_country, m_eq>()(db, key_value[1]);
+                    }
+                    else if (key_value[0] == "city"sv)
+                    {
+                        recommend_for_account.filter.field = f_city();
+                        recommend_for_account.filter.method = m_eq();
+                        recommend_for_account.filter.value = t_value<f_city, m_eq>()(db, key_value[1]);
+                    }
+                }
+
+                if (is_valid && has_limit)
+                {
+                    result = std::move(recommend_for_account);
+                }
+            }
         }
-        else if (target_parts[3] == "suggest"sv && target_parts.size() == 4)
+        else if (target_parts[2] == "suggest"sv && target_parts.size() == 4)
         {
         }
     }

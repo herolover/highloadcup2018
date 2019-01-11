@@ -9,6 +9,7 @@
 #include "RequestHandler/BadRequest.h"
 #include "RequestHandler/FilterAccounts.h"
 #include "RequestHandler/GroupAccounts.h"
+#include "RequestHandler/RecommendForAccount.h"
 
 #include "PerformanceTimer.h"
 
@@ -25,16 +26,20 @@
 
 using namespace std::literals;
 
-int main()
+int main(int argc, char *argv[])
 {
     DB db;
     DBLoader db_loader(db);
 
     PerformanceTimer timer;
 
-    for (int i = 1; i <= 130; ++i)
+    std::string data(argv[1]);
+    std::size_t limit = 0;
+    std::from_chars(argv[2], argv[2] + std::strlen(argv[2]), limit);
+
+    for (std::size_t i = 1; i <= limit; ++i)
     {
-        std::string filename = "../data/real_data/data/accounts_" + std::to_string(i) + ".json";
+        std::string filename = "../data/" + data + "/data/accounts_" + std::to_string(i) + ".json";
 
         rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
         std::FILE *fp = std::fopen(filename.c_str(), "r");
@@ -53,7 +58,7 @@ int main()
     http_server.start([&db](HttpServer::HttpRequest &request, HttpServer::HttpResponse &response)
     {
         auto decoded_target = decode_url(std::string_view(request.target().data(), request.target().size()));
-        auto parsed_request = parse_http_request(request, std::string_view(decoded_target.data(), decoded_target.size()));
+        auto parsed_request = parse_http_request(db, request, std::string_view(decoded_target.data(), decoded_target.size()));
         std::visit([&db, &response](auto &&request)
         {
             RequestHandler<std::remove_reference_t<decltype(request)>>::handle(db, request, response);

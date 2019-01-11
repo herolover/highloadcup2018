@@ -24,7 +24,7 @@ struct t_get_json_value<f_city>
 template<>
 struct t_value<f_city, m_any>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         auto city_list = split(value);
         std::sort(city_list.begin(), city_list.end());

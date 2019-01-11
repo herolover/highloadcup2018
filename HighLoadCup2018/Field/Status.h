@@ -22,7 +22,7 @@ struct t_get_json_value<f_status>
 template<>
 struct t_value<f_status, m_eq>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         return convert_account_status(value);
     }
@@ -31,7 +31,7 @@ struct t_value<f_status, m_eq>
 template<>
 struct t_value<f_status, m_neq>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         return convert_account_status(value);
     }

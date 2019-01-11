@@ -16,19 +16,33 @@ struct t_has_method<f_interests, M>
 template<>
 struct t_value<f_interests, m_contains>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         auto interest_list = split(value);
-        std::sort(interest_list.begin(), interest_list.end());
+        Account::interest_mask_t mask;
+        for (auto &interest : interest_list)
+        {
+            auto interest_it = std::lower_bound(db.interest_list.begin(), db.interest_list.end(), interest, string_view_compare());
+            if (**interest_it == interest)
+            {
+                auto bit = std::distance(db.interest_list.begin(), interest_it);
+                mask[bit] = true;
+            }
+            else
+            {
+                mask.flip();
+                break;
+            }
+        }
 
-        return std::move(interest_list);
+        return std::make_pair(interest_list, mask);
     }
 };
 
 template<>
 struct t_value<f_interests, m_any>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         auto interest_list = split(value);
         std::sort(interest_list.begin(), interest_list.end());
@@ -54,16 +68,9 @@ struct t_select<f_interests, m_contains>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
-        std::vector<std::pair<IterType, IterType>> range_list;
-
-        for (auto &interest : std::get<std::vector<std::string_view>>(value))
-        {
-            auto &id_list = db.interest[interest];
-            range_list.push_back(std::make_pair(id_list.rbegin(), id_list.rend()));
-        }
-
-        handler(std::make_pair(intersection_iter<true, IterType>(range_list), intersection_iter<true, IterType>(range_list, true)));
+        auto &interest_list = std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).first;
+        auto &account_list = db.interest[interest_list.front()];
+        handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
 
@@ -91,15 +98,8 @@ struct t_check<f_interests, m_contains>
 {
     bool operator()(const Account &account, const Value &value) const
     {
-        for (auto &interest : std::get<std::vector<std::string_view>>(value))
-        {
-            if (!std::binary_search(account.interest.begin(), account.interest.end(), interest, string_view_compare()))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        auto &test_mask = std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).second;
+        return (account.interest_mask & test_mask) == test_mask;
     }
 };
 

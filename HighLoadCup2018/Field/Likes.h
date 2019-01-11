@@ -16,7 +16,7 @@ struct t_has_method<f_likes, M>
 template<>
 struct t_value<f_likes, m_eq>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         uint32_t id = 0;
         std::from_chars(value.data(), value.data() + value.size(), id);
@@ -28,7 +28,7 @@ struct t_value<f_likes, m_eq>
 template<>
 struct t_value<f_likes, m_contains>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         std::vector<uint32_t> id_list;
         for (auto &string_id : split(value))

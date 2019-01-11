@@ -16,6 +16,8 @@
 #include <map>
 #include <algorithm>
 #include <optional>
+#include <functional>
+#include <unordered_map>
 
 namespace mi = boost::multi_index;
 
@@ -43,8 +45,9 @@ struct DB
     // *INDENT-OFF*
     mi::multi_index_container<Account,
         mi::indexed_by<
-            mi::random_access<
-                mi::tag<id_tag>
+            mi::ordered_unique<
+                mi::tag<id_tag>,
+                mi::member<Account, uint32_t, &Account::id>
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
@@ -162,30 +165,63 @@ struct DB
         AccountIt _it;
     };
 
+    std::vector<Account::interest_t> interest_list;
     std::map<Account::interest_t, std::vector<AccountReference>, string_view_compare> interest;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
+    //std::map<uint32_t, std::vector<AccountReference>> recommendation;
 
     void add_account(Account &&new_account)
     {
+        for (auto &interest : new_account.interest)
+        {
+            auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, string_view_compare());
+            if (it == interest_list.end() || **it != *interest)
+            {
+                interest_list.insert(it, interest);
+            }
+        }
         account.insert(account.end(), std::move(new_account));
     }
 
     void build_indicies()
     {
         auto &index = account.get<id_tag>();
-        index.sort();
         for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
         {
             auto &account = *account_it;
+            Account::interest_mask_t interest_mask;
             for (auto &account_interest : account.interest)
             {
                 interest[account_interest].push_back(account_it);
+                auto bit = std::distance(interest_list.begin(), std::lower_bound(interest_list.begin(), interest_list.end(), account_interest, string_view_compare()));
+                interest_mask[bit] = true;
             }
+            index.modify(account_it, [&interest_mask](Account &a)
+            {
+                a.interest_mask = interest_mask;
+            });
 
             for (auto &like : account.like)
             {
                 liked_by[like].push_back(account_it);
             }
+
+            //if (account.interest.size() > 0)
+            //{
+            //    auto &account_recommendation = recommendation[account.id];
+            //    for (auto account_it_1 = index.begin(); account_it_1 != index.end(); ++account_it_1)
+            //    {
+            //        if (account_it != account_it_1 && account.is_male != account_it_1->is_male && account.common_interest_size(*account_it_1) > 0)
+            //        {
+            //            account_recommendation.push_back(account_it_1);
+            //        }
+            //    }
+
+            //    std::sort(account_recommendation.begin(), account_recommendation.end(), [&account](auto &&a, auto &&b)
+            //    {
+            //        return account.is_more_compatible(a.account(), b.account());
+            //    });
+            //}
         }
 
         for (auto &account : liked_by)

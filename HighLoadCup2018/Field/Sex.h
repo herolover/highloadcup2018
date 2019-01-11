@@ -20,7 +20,7 @@ struct t_get_json_value<f_sex>
 template<>
 struct t_value<f_sex, m_eq>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         return value[0] == 'm';
     }

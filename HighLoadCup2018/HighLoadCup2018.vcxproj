@@ -166,6 +166,7 @@
     <ClInclude Include="RequestHandler\BadRequest.h" />
     <ClInclude Include="RequestHandler\FilterAccounts.h" />
     <ClInclude Include="RequestHandler\GroupAccounts.h" />
+    <ClInclude Include="RequestHandler\RecommendForAccount.h" />
     <ClInclude Include="SharedString.h" />
     <ClInclude Include="HandlerIter.h" />
     <ClInclude Include="DB.h" />

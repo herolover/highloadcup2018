@@ -125,5 +125,8 @@
     <ClInclude Include="Field\Joined.h">
       <Filter>Header Files\Field</Filter>
     </ClInclude>
+    <ClInclude Include="RequestHandler\RecommendForAccount.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

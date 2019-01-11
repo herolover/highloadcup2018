@@ -130,6 +130,7 @@ using Method = std::variant<
 using Value = std::variant<
     std::string_view,
     std::vector<std::string_view>,
+    std::pair<std::vector<std::string_view>, Account::interest_mask_t>,
     std::vector<uint32_t>,
     std::nullptr_t,
     uint32_t,

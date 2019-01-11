@@ -5,7 +5,7 @@
 template<>
 struct t_value<f_joined, m_year>
 {
-    Value operator()(const std::string_view &value) const
+    Value operator()(DB &db, const std::string_view &value) const
     {
         uint16_t year = 0;
         std::from_chars(value.data(), value.data() + value.size(), year);
