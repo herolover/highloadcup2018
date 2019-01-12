@@ -104,23 +104,43 @@ struct RequestHandler<FilterAccounts>
 
     static void handle(DB &db, const FilterAccounts &request, HttpServer::HttpResponse &response)
     {
-        using dont_select_by_method = boost::mp11::mp_list<m_lt, m_gt, m_starts, m_now, m_neq>;
+        using field_priority_list = boost::mp11::mp_list<f_likes, f_second_name, f_phone, f_city, f_first_name, f_interests, f_country, f_birth, f_email, f_premium, f_status, f_sex>;
+        using method_ignore_list = boost::mp11::mp_list<m_lt, m_gt, m_starts, m_neq>;
 
-        auto select_by_filter_it = request.filter.begin();
-        for (; select_by_filter_it != request.filter.end(); ++select_by_filter_it)
+        auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
         {
-            bool is_suitable = std::visit([](auto &&method)
+            auto a_field_value = for_field_method(a.field, a.method, [](auto &&field, auto &&method)
             {
-                return !boost::mp11::mp_contains<dont_select_by_method, std::decay_t<decltype(method)>>::value;
-            }, select_by_filter_it->method);
+                if constexpr(boost::mp11::mp_contains<method_ignore_list, std::decay_t<decltype(method)>>::value)
+                {
+                    return boost::mp11::mp_size<field_priority_list>::value;
+                }
 
-            if (is_suitable)
+                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
+            });
+
+            auto b_field_value = for_field_method(b.field, b.method, [](auto &&field, auto &&method)
             {
-                break;
-            }
+                if constexpr(boost::mp11::mp_contains<method_ignore_list, std::decay_t<decltype(method)>>::value)
+                {
+                    return boost::mp11::mp_size<field_priority_list>::value;
+                }
+                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
+            });
+
+            return a_field_value < b_field_value;
+        });
+
+        bool is_selectable = false;
+        if (select_by_filter_it != request.filter.end())
+        {
+            is_selectable = std::visit([](auto &&method)
+            {
+                return !boost::mp11::mp_contains<method_ignore_list, std::decay_t<decltype(method)>>::value;
+            }, select_by_filter_it->method);
         }
 
-        if (select_by_filter_it != request.filter.end())
+        if (is_selectable)
         {
             for_field_method(select_by_filter_it->field, select_by_filter_it->method, [&db, &request, &response, &select_by_filter_it](auto &&field, auto &&method)
             {
