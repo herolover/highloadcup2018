@@ -5,7 +5,7 @@
 template<>
 struct RequestHandler<RecommendForAccount>
 {
-    static void handle(DB &db, const RecommendForAccount &request, HttpServer::HttpResponse &response)
+    static void handle(DB &db, RecommendForAccount &request, HttpServer::HttpResponse &response)
     {
 
     }

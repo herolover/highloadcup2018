@@ -102,16 +102,65 @@ struct RequestHandler<FilterAccounts>
         response.prepare_payload();
     }
 
-    static void handle(DB &db, const FilterAccounts &request, HttpServer::HttpResponse &response)
+    static void optimize_filter_list(DB &db, FilterAccounts &request)
     {
+        std::vector<Filter>::iterator first_name_it = request.filter.end();
+        std::vector<Filter>::iterator sex_it = request.filter.end();
+        for (auto it = request.filter.begin(); it != request.filter.end(); ++it)
+        {
+            std::visit([&first_name_it, &sex_it, &it](auto &&field)
+            {
+                if constexpr(std::is_same_v<f_first_name, std::decay_t<decltype(field)>>)
+                {
+                    first_name_it = it;
+                }
+                if constexpr(std::is_same_v<f_sex, std::decay_t<decltype(field)>>)
+                {
+                    sex_it = it;
+                }
+            }, it->field);
+        }
+
+        if (first_name_it != request.filter.end() && sex_it != request.filter.end())
+        {
+            bool &is_male = std::get<bool>(sex_it->value);
+            auto &name_list = is_male ? db.female_first_name : db.male_first_name;
+            std::visit([&name_list](auto &&value)
+            {
+                if constexpr(std::is_same_v<std::vector<std::string_view>, std::decay_t<decltype(value)>>)
+                {
+                    for (auto &name : value)
+                    {
+                        if (std::binary_search(name_list.begin(), name_list.end(), name, string_view_compare()))
+                        {
+                            name = "";
+                        }
+                    }
+                }
+                else if constexpr(std::is_same_v<std::string_view, std::decay_t<decltype(value)>>)
+                {
+                    if (std::binary_search(name_list.begin(), name_list.end(), value, string_view_compare()))
+                    {
+                        value = "";
+                    }
+                }
+            }, first_name_it->value);
+        }
+    }
+
+    static void handle(DB &db, FilterAccounts &request, HttpServer::HttpResponse &response)
+    {
+        optimize_filter_list(db, request);
+
         using field_priority_list = boost::mp11::mp_list<f_likes, f_second_name, f_phone, f_city, f_first_name, f_interests, f_country, f_birth, f_email, f_premium, f_status, f_sex>;
-        using method_ignore_list = boost::mp11::mp_list<m_lt, m_gt, m_starts, m_neq>;
+        using method_ignore_list = boost::mp11::mp_list<m_lt, m_gt, m_starts, m_neq, m_null>;
 
         auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
         {
             auto a_field_value = for_field_method(a.field, a.method, [](auto &&field, auto &&method)
             {
-                if constexpr(boost::mp11::mp_contains<method_ignore_list, std::decay_t<decltype(method)>>::value)
+                using method_type = std::decay_t<decltype(method)>;
+                if constexpr(boost::mp11::mp_contains<method_ignore_list, method_type>::value)
                 {
                     return boost::mp11::mp_size<field_priority_list>::value;
                 }
@@ -121,10 +170,12 @@ struct RequestHandler<FilterAccounts>
 
             auto b_field_value = for_field_method(b.field, b.method, [](auto &&field, auto &&method)
             {
-                if constexpr(boost::mp11::mp_contains<method_ignore_list, std::decay_t<decltype(method)>>::value)
+                using method_type = std::decay_t<decltype(method)>;
+                if constexpr(boost::mp11::mp_contains<method_ignore_list, method_type>::value)
                 {
                     return boost::mp11::mp_size<field_priority_list>::value;
                 }
+
                 return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
             });
 

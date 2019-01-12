@@ -176,12 +176,13 @@ struct RequestHandler<GroupAccounts>
         response.prepare_payload();
     }
 
-    static void handle(DB &db, const GroupAccounts &request, HttpServer::HttpResponse &response)
+    static void handle(DB &db, GroupAccounts &request, HttpServer::HttpResponse &response)
     {
         using priority_list = boost::mp11::mp_list<f_likes, f_city, f_interests, f_country, f_birth, f_joined, f_status, f_sex>;
 
         auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
         {
+            //TODO VISIT
             using a_type = std::decay_t<decltype(a.field)>;
             using b_type = std::decay_t<decltype(b.field)>;
             return boost::mp11::mp_find<priority_list, a_type>::value < boost::mp11::mp_find<priority_list, b_type>::value;

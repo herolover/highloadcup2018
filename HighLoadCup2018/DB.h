@@ -165,6 +165,8 @@ struct DB
         AccountIt _it;
     };
 
+    std::vector<Account::first_name_t> male_first_name;
+    std::vector<Account::first_name_t> female_first_name;
     std::vector<Account::interest_t> interest_list;
     std::map<Account::interest_t, std::vector<AccountReference>, string_view_compare> interest;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
@@ -178,6 +180,15 @@ struct DB
             if (it == interest_list.end() || **it != *interest)
             {
                 interest_list.insert(it, interest);
+            }
+        }
+        if (new_account.first_name)
+        {
+            auto &first_name_list = new_account.is_male ? male_first_name : female_first_name;
+            auto it = std::lower_bound(first_name_list.begin(), first_name_list.end(), new_account.first_name, string_view_compare());
+            if (it == first_name_list.end() || **it != *new_account.first_name)
+            {
+                first_name_list.insert(it, new_account.first_name);
             }
         }
         account.insert(account.end(), std::move(new_account));
