@@ -23,3 +23,12 @@ struct t_select<f_joined, m_year>
         handler(make_reverse_range(db.account.get<DB::joined_year_tag>().equal_range(std::get<uint16_t>(year))));
     }
 };
+
+template<>
+struct t_check<f_joined, m_year>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return account.joined_year == std::get<uint16_t>(value);
+    }
+};

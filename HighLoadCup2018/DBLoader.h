@@ -258,7 +258,7 @@ public:
         }
         else if (state == State::ACCOUNT_KEY)
         {
-            std::sort(account.interest.begin(), account.interest.end(), string_view_compare());
+            std::sort(account.interest.begin(), account.interest.end());
             std::sort(account.like.begin(), account.like.end());
             _db.add_account(std::move(account));
             account = {};

@@ -4,29 +4,7 @@
 #include <memory>
 #include <set>
 
-using string_ptr = std::shared_ptr<std::string>;
-
-inline bool operator==(const std::string &a, const std::string_view &b)
-{
-    return std::string_view(a.c_str(), a.size()) == b;
-}
-
-inline bool operator==(const std::string_view &a, const std::string &b)
-{
-    return a == std::string_view(b.c_str(), b.size());
-}
-
-inline bool operator<(const std::string &a, const std::string_view &b)
-{
-    return std::string_view(a.c_str(), a.size()) < b;
-}
-
-inline bool operator<(const std::string_view &a, const std::string &b)
-{
-    return a < std::string_view(b.c_str(), b.size());
-}
-
-struct string_view_compare
+struct common_less
 {
     using is_transparent = void;
 
@@ -133,9 +111,34 @@ public:
         return _value != nullptr;
     }
 
+    bool operator==(const shared_string &a) const
+    {
+        return !_value && !a._value || _value && a._value && *_value == *a._value;
+    }
+
+    bool operator!=(const shared_string &a) const
+    {
+        return !(*this == a);
+    }
+
+    bool operator<(const shared_string &a) const
+    {
+        return common_less()(*this, a);
+    }
+
     bool operator==(const std::string_view &value) const
     {
-        return std::string_view(_value->c_str(), _value->size()) == value;
+        return _value && *_value == value;
+    }
+
+    bool operator!=(const std::string_view &value) const
+    {
+        return !(*this != value);
+    }
+
+    bool operator<(const std::string_view &value) const
+    {
+        return common_less()(*this, value);
     }
 
     static std::size_t size()
@@ -144,9 +147,9 @@ public:
     }
 
 private:
-    string_ptr _value;
-    static std::set<string_ptr, string_view_compare> _value_storage;
+    std::shared_ptr<std::string> _value;
+    static std::set<std::shared_ptr<std::string>, common_less> _value_storage;
 };
 
 template<int ID>
-std::set<string_ptr, string_view_compare> shared_string<ID>::_value_storage;
+std::set<std::shared_ptr<std::string>, common_less> shared_string<ID>::_value_storage;

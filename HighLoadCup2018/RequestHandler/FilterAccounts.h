@@ -131,7 +131,7 @@ struct RequestHandler<FilterAccounts>
                 {
                     for (auto &name : value)
                     {
-                        if (std::binary_search(name_list.begin(), name_list.end(), name, string_view_compare()))
+                        if (std::binary_search(name_list.begin(), name_list.end(), name, common_less()))
                         {
                             name = "";
                         }
@@ -139,7 +139,7 @@ struct RequestHandler<FilterAccounts>
                 }
                 else if constexpr(std::is_same_v<std::string_view, std::decay_t<decltype(value)>>)
                 {
-                    if (std::binary_search(name_list.begin(), name_list.end(), value, string_view_compare()))
+                    if (std::binary_search(name_list.begin(), name_list.end(), value, common_less()))
                     {
                         value = "";
                     }

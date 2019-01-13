@@ -18,9 +18,9 @@ inline bool convert_sex(const std::string_view &value)
     return value[0] == 'm';
 }
 
-inline std::string_view convert_sex(bool is_male)
+inline const char *convert_sex(bool is_male)
 {
-    return is_male ? "m"sv : "f"sv;
+    return is_male ? "m" : "f";
 }
 
 inline Account::Status convert_account_status(const std::string_view &value)

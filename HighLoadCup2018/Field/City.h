@@ -88,7 +88,7 @@ struct t_check<f_city, m_any>
     bool operator()(const Account &account, const Value &value) const
     {
         auto &city_list = std::get<std::vector<std::string_view>>(value);
-        return (bool)account.city && std::binary_search(city_list.begin(), city_list.end(), std::string_view(account.city->c_str(), account.city->size()));
+        return (bool)account.city && std::binary_search(city_list.begin(), city_list.end(), *account.city);
     }
 };
 

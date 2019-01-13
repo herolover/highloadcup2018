@@ -242,6 +242,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                             else
                             {
                                 method = m_eq();
+                                value = t_value<field_type, m_eq>()(db, key_value[1]);
                             }
                         }, field);
 

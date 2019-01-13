@@ -76,6 +76,15 @@ struct t_select<f_likes, m_contains>
 };
 
 template<>
+struct t_check<f_likes, m_eq>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        return std::binary_search(account.like.begin(), account.like.end(), std::get<uint32_t>(value));
+    }
+};
+
+template<>
 struct t_check<f_likes, m_contains>
 {
     bool operator()(const Account &account, const Value &value) const

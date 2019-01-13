@@ -88,7 +88,7 @@ struct t_check<f_first_name, m_any>
     bool operator()(const Account &account, const Value &value) const
     {
         auto &first_name_list = std::get<std::vector<std::string_view>>(value);
-        return account.first_name && std::binary_search(first_name_list.begin(), first_name_list.end(), std::string_view(account.first_name->c_str(), account.first_name->size()));
+        return account.first_name && std::binary_search(first_name_list.begin(), first_name_list.end(), *account.first_name);
     }
 };
 

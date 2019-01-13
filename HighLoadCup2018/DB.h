@@ -18,6 +18,7 @@
 #include <optional>
 #include <functional>
 #include <unordered_map>
+#include <tuple>
 
 namespace mi = boost::multi_index;
 
@@ -52,12 +53,12 @@ struct DB
             mi::ordered_unique<
                 mi::tag<email_tag>,
                 mi::member<Account, std::string, &Account::email>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<email_domain_tag>,
                 mi::member<Account, std::string, &Account::email_domain>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<status_tag>,
@@ -66,22 +67,22 @@ struct DB
             mi::ordered_non_unique<
                 mi::tag<first_name_tag>,
                 mi::member<Account, Account::first_name_t, &Account::first_name>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<second_name_tag>,
                 mi::member<Account, Account::second_name_t, &Account::second_name>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<phone_tag>,
                 mi::member<Account, std::string, &Account::phone>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<phone_code_tag>,
                 mi::member<Account, std::string, &Account::phone_code>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<sex_tag>,
@@ -98,12 +99,12 @@ struct DB
             mi::ordered_non_unique<
                 mi::tag<country_tag>,
                 mi::member<Account, Account::country_t, &Account::country>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<city_tag>,
                 mi::member<Account, Account::city_t, &Account::city>,
-                string_view_compare
+                common_less
             >,
             mi::ordered_non_unique<
                 mi::tag<joined_tag>,
@@ -165,18 +166,90 @@ struct DB
         AccountIt _it;
     };
 
+    struct Stats
+    {
+        template<class T>
+        struct ValueCounter
+        {
+            struct Value
+            {
+                T value;
+                uint32_t count = 0;
+
+                template<class H>
+                bool operator==(const H &another_value) const
+                {
+                    return value == another_value;
+                }
+
+                bool operator<(const Value &another) const
+                {
+                    return count < another.count;
+                }
+            };
+
+            void increment(const T &value)
+            {
+                auto it = std::find(values.begin(), values.end(), value);
+                if (it == values.end())
+                {
+                    values.push_back(Value{value, 1});
+                }
+                else
+                {
+                    ++it->count;
+                }
+            }
+
+            void sort()
+            {
+                std::sort(values.begin(), values.end());
+            }
+
+            std::vector<Value> values;
+        };
+
+        ValueCounter<bool> sex;
+        ValueCounter<Account::Status> status;
+        ValueCounter<Account::interest_t> interest;
+        ValueCounter<Account::country_t> country;
+        ValueCounter<Account::city_t> city;
+
+        ValueCounter<std::tuple<Account::country_t, bool>> country_sex;
+        ValueCounter<std::tuple<Account::city_t, bool>> city_sex;
+
+        ValueCounter<std::tuple<Account::country_t, Account::Status>> country_status;
+        ValueCounter<std::tuple<Account::city_t, Account::Status>> city_status;
+
+        void sort()
+        {
+            sex.sort();
+            status.sort();
+            interest.sort();
+            country.sort();
+            city.sort();
+
+            country_sex.sort();
+            city_sex.sort();
+
+            country_status.sort();
+            city_status.sort();
+        }
+    };
+
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
     std::vector<Account::interest_t> interest_list;
-    std::map<Account::interest_t, std::vector<AccountReference>, string_view_compare> interest;
+    std::map<Account::interest_t, std::vector<AccountReference>, common_less> interest;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
+    Stats stats;
     //std::map<uint32_t, std::vector<AccountReference>> recommendation;
 
     void add_account(Account &&new_account)
     {
         for (auto &interest : new_account.interest)
         {
-            auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, string_view_compare());
+            auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest);
             if (it == interest_list.end() || **it != *interest)
             {
                 interest_list.insert(it, interest);
@@ -185,17 +258,41 @@ struct DB
         if (new_account.first_name)
         {
             auto &first_name_list = new_account.is_male ? male_first_name : female_first_name;
-            auto it = std::lower_bound(first_name_list.begin(), first_name_list.end(), new_account.first_name, string_view_compare());
+            auto it = std::lower_bound(first_name_list.begin(), first_name_list.end(), new_account.first_name);
             if (it == first_name_list.end() || **it != *new_account.first_name)
             {
                 first_name_list.insert(it, new_account.first_name);
             }
         }
+
+        // stats
+        {
+            stats.sex.increment(new_account.is_male);
+            stats.status.increment(new_account.status);
+            for (auto &interest : new_account.interest)
+            {
+                stats.interest.increment(interest);
+            }
+            if (new_account.country)
+            {
+                stats.country.increment(new_account.country);
+                stats.country_sex.increment(std::tie(new_account.country, new_account.is_male));
+                stats.country_status.increment(std::tie(new_account.country, new_account.status));
+            }
+            if (new_account.city)
+            {
+                stats.city.increment(new_account.city);
+                stats.city_sex.increment(std::tie(new_account.city, new_account.is_male));
+                stats.city_status.increment(std::tie(new_account.city, new_account.status));
+            }
+        }
+
         account.insert(account.end(), std::move(new_account));
     }
 
     void build_indicies()
     {
+        stats.sort();
         auto &index = account.get<id_tag>();
         for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
         {
@@ -204,7 +301,7 @@ struct DB
             for (auto &account_interest : account.interest)
             {
                 interest[account_interest].push_back(account_it);
-                auto bit = std::distance(interest_list.begin(), std::lower_bound(interest_list.begin(), interest_list.end(), account_interest, string_view_compare()));
+                auto bit = std::distance(interest_list.begin(), std::lower_bound(interest_list.begin(), interest_list.end(), account_interest));
                 interest_mask[bit] = true;
             }
             index.modify(account_it, [&interest_mask](Account &a)

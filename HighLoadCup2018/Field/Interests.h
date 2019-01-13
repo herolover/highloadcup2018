@@ -22,7 +22,7 @@ struct t_value<f_interests, m_contains>
         Account::interest_mask_t mask;
         for (auto &interest : interest_list)
         {
-            auto interest_it = std::lower_bound(db.interest_list.begin(), db.interest_list.end(), interest, string_view_compare());
+            auto interest_it = std::lower_bound(db.interest_list.begin(), db.interest_list.end(), interest, common_less());
             if (**interest_it == interest)
             {
                 auto bit = std::distance(db.interest_list.begin(), interest_it);
@@ -94,6 +94,16 @@ struct t_select<f_interests, m_any>
 };
 
 template<>
+struct t_check<f_interests, m_eq>
+{
+    bool operator()(const Account &account, const Value &value) const
+    {
+        auto &interest = std::get<std::string_view>(value);
+        return std::binary_search(account.interest.begin(), account.interest.end(), interest, common_less());
+    }
+};
+
+template<>
 struct t_check<f_interests, m_contains>
 {
     bool operator()(const Account &account, const Value &value) const
@@ -110,7 +120,7 @@ struct t_check<f_interests, m_any>
     {
         for (auto &interest : std::get<std::vector<std::string_view>>(value))
         {
-            if (std::binary_search(account.interest.begin(), account.interest.end(), interest, string_view_compare()))
+            if (std::binary_search(account.interest.begin(), account.interest.end(), interest, common_less()))
             {
                 return true;
             }

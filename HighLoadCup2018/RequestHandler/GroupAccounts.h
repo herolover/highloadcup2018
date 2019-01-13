@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../RequestHandler.h"
+#include "../Convert.h"
 
 #include <boost/mp11.hpp>
 
@@ -10,7 +11,7 @@
 template<>
 struct RequestHandler<GroupAccounts>
 {
-    using GroupKey = std::variant<bool, Account::Status, Account::interest_t, Account::country_t, Account::city_t>;
+    using GroupKey = std::variant<bool, Account::Status, std::string_view>;
 
     struct JSONResult
     {
@@ -24,25 +25,25 @@ struct RequestHandler<GroupAccounts>
             document.SetObject();
         }
 
-        void add_group(const std::string_view &key_name, const GroupKey &key_value, uint32_t counter)
+        void add_group(const std::string_view &key_name, const GroupKey &value, uint32_t counter)
         {
             rapidjson::Value group(rapidjson::kObjectType);
-            std::visit([this, &key_name, &group](auto &&key_value)
+            std::visit([this, &key_name, &group](auto &&value)
             {
-                using key_value_type = std::decay_t<decltype(key_value)>;
+                using key_value_type = std::decay_t<decltype(value)>;
                 if constexpr(std::is_same_v<bool, key_value_type>)
                 {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), key_value, document.GetAllocator());
+                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_sex(value)), document.GetAllocator());
                 }
                 else if constexpr(std::is_same_v<Account::Status, key_value_type>)
                 {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), (int)key_value, document.GetAllocator());
+                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_account_status(value)), document.GetAllocator());
                 }
                 else
                 {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(*key_value), document.GetAllocator());
+                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
                 }
-            }, key_value);
+            }, value);
             group.AddMember("count", counter, document.GetAllocator());
 
             group_array.PushBack(std::move(group), document.GetAllocator());
@@ -88,11 +89,11 @@ struct RequestHandler<GroupAccounts>
     template<class BeginIt, class EndIt>
     static void filter(const GroupAccounts &request, HttpServer::HttpResponse &response, BeginIt &&begin, EndIt &&end)
     {
-        std::list<GroupCounter> single_key;
+        std::vector<GroupCounter> single_key;
         auto count_key = [&single_key](const GroupKey &key)
         {
             auto it = std::lower_bound(single_key.begin(), single_key.end(), key);
-            if (it->key == key)
+            if (it != single_key.end() && it->key == key)
             {
                 ++it->counter;
             }
@@ -124,7 +125,7 @@ struct RequestHandler<GroupAccounts>
             {
                 if (request.key.size() == 1)
                 {
-                    std::visit([&account, &single_key, &count_key](auto &&field)
+                    std::visit([&account, &count_key](auto &&field)
                     {
                         using field_type = std::decay_t<decltype(field)>;
                         if constexpr(std::is_same_v<f_sex, field_type>)
@@ -139,26 +140,48 @@ struct RequestHandler<GroupAccounts>
                         {
                             for (auto &interest : account.interest)
                             {
-                                count_key(interest);
+                                count_key((std::string_view)*interest);
                             }
                         }
                         else if constexpr(std::is_same_v<f_country, field_type>)
                         {
-                            count_key(account.country);
+                            if (account.country)
+                            {
+                                count_key((std::string_view)*account.country);
+                            }
                         }
                         else if constexpr(std::is_same_v<f_city, field_type>)
                         {
-                            count_key(account.city);
+                            if (account.city)
+                            {
+                                count_key((std::string_view)*account.city);
+                            }
                         }
                     }, request.key[0]);
                 }
             }
         }
 
-        single_key.sort([](const auto &a, const auto &b)
+        auto limit = single_key.size();
+        if (limit > request.limit)
         {
-            return a.counter > b.counter;
-        });
+            limit = request.limit;
+        }
+
+        if (request.is_large_first)
+        {
+            std::partial_sort(single_key.begin(), single_key.begin() + limit, single_key.end(), [](const auto &a, const auto &b)
+            {
+                return a.counter > b.counter;
+            });
+        }
+        else
+        {
+            std::partial_sort(single_key.begin(), single_key.begin() + limit, single_key.end(), [](const auto &a, const auto &b)
+            {
+                return a.counter < b.counter;
+            });
+        }
 
         JSONResult result;
         std::size_t counter = 0;
@@ -178,14 +201,21 @@ struct RequestHandler<GroupAccounts>
 
     static void handle(DB &db, GroupAccounts &request, HttpServer::HttpResponse &response)
     {
-        using priority_list = boost::mp11::mp_list<f_likes, f_city, f_interests, f_country, f_birth, f_joined, f_status, f_sex>;
+        using field_priority_list = boost::mp11::mp_list<f_likes, f_city, f_interests, f_country, f_birth, f_joined, f_status, f_sex>;
 
         auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
         {
-            //TODO VISIT
-            using a_type = std::decay_t<decltype(a.field)>;
-            using b_type = std::decay_t<decltype(b.field)>;
-            return boost::mp11::mp_find<priority_list, a_type>::value < boost::mp11::mp_find<priority_list, b_type>::value;
+            auto a_field_value = std::visit([](auto &&field)
+            {
+                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
+            }, a.field);
+
+            auto b_field_value = std::visit([](auto &&field)
+            {
+                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
+            }, b.field);
+
+            return a_field_value < b_field_value;
         });
 
         if (select_by_filter_it != request.filter.end())
