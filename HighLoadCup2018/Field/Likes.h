@@ -73,7 +73,7 @@ struct t_check<f_likes, m_eq>
 {
     bool operator()(const Account &account, const Value &value) const
     {
-        return std::binary_search(account.like.begin(), account.like.end(), std::get<uint32_t>(value));
+        return std::binary_search(account.like_list.begin(), account.like_list.end(), std::get<uint32_t>(value), Like::is_less());
     }
 };
 
@@ -84,7 +84,7 @@ struct t_check<f_likes, m_contains>
     {
         for (auto &id : std::get<std::vector<uint32_t>>(value))
         {
-            if (!std::binary_search(account.like.begin(), account.like.end(), id))
+            if (!std::binary_search(account.like_list.begin(), account.like_list.end(), id, Like::is_less()))
             {
                 return false;
             }

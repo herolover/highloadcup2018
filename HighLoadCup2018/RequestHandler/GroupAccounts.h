@@ -138,7 +138,7 @@ struct RequestHandler<GroupAccounts>
                         }
                         else if constexpr(std::is_same_v<f_interests, field_type>)
                         {
-                            for (auto &interest : account.interest)
+                            for (auto &interest : account.interest_list)
                             {
                                 count_key((std::string_view)*interest);
                             }

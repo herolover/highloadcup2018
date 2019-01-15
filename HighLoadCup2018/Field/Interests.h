@@ -99,7 +99,7 @@ struct t_check<f_interests, m_eq>
     bool operator()(const Account &account, const Value &value) const
     {
         auto &interest = std::get<std::string_view>(value);
-        return std::binary_search(account.interest.begin(), account.interest.end(), interest, common_less());
+        return std::binary_search(account.interest_list.begin(), account.interest_list.end(), interest, common_less());
     }
 };
 
@@ -120,7 +120,7 @@ struct t_check<f_interests, m_any>
     {
         for (auto &interest : std::get<std::vector<std::string_view>>(value))
         {
-            if (std::binary_search(account.interest.begin(), account.interest.end(), interest, common_less()))
+            if (std::binary_search(account.interest_list.begin(), account.interest_list.end(), interest, common_less()))
             {
                 return true;
             }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Account.h"
+#include "FieldMethod.h"
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
@@ -110,7 +111,7 @@ struct DB
                 mi::tag<joined_tag>,
                 mi::member<Account, int32_t, &Account::joined>
             >,
-                mi::ordered_non_unique<
+            mi::ordered_non_unique<
                 mi::tag<joined_year_tag>,
                 mi::member<Account, uint16_t, &Account::joined_year>
             >,
@@ -166,88 +167,16 @@ struct DB
         AccountIt _it;
     };
 
-    struct Stats
-    {
-        template<class T>
-        struct ValueCounter
-        {
-            struct Value
-            {
-                T value;
-                uint32_t count = 0;
-
-                template<class H>
-                bool operator==(const H &another_value) const
-                {
-                    return value == another_value;
-                }
-
-                bool operator<(const Value &another) const
-                {
-                    return count < another.count;
-                }
-            };
-
-            void increment(const T &value)
-            {
-                auto it = std::find(values.begin(), values.end(), value);
-                if (it == values.end())
-                {
-                    values.push_back(Value{value, 1});
-                }
-                else
-                {
-                    ++it->count;
-                }
-            }
-
-            void sort()
-            {
-                std::sort(values.begin(), values.end());
-            }
-
-            std::vector<Value> values;
-        };
-
-        ValueCounter<bool> sex;
-        ValueCounter<Account::Status> status;
-        ValueCounter<Account::interest_t> interest;
-        ValueCounter<Account::country_t> country;
-        ValueCounter<Account::city_t> city;
-
-        ValueCounter<std::tuple<Account::country_t, bool>> country_sex;
-        ValueCounter<std::tuple<Account::city_t, bool>> city_sex;
-
-        ValueCounter<std::tuple<Account::country_t, Account::Status>> country_status;
-        ValueCounter<std::tuple<Account::city_t, Account::Status>> city_status;
-
-        void sort()
-        {
-            sex.sort();
-            status.sort();
-            interest.sort();
-            country.sort();
-            city.sort();
-
-            country_sex.sort();
-            city_sex.sort();
-
-            country_status.sort();
-            city_status.sort();
-        }
-    };
-
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
     std::vector<Account::interest_t> interest_list;
     std::map<Account::interest_t, std::vector<AccountReference>, common_less> interest;
+
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
-    Stats stats;
-    //std::map<uint32_t, std::vector<AccountReference>> recommendation;
 
     void add_account(Account &&new_account)
     {
-        for (auto &interest : new_account.interest)
+        for (auto &interest : new_account.interest_list)
         {
             auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest);
             if (it == interest_list.end() || **it != *interest)
@@ -265,40 +194,17 @@ struct DB
             }
         }
 
-        // stats
-        {
-            stats.sex.increment(new_account.is_male);
-            stats.status.increment(new_account.status);
-            for (auto &interest : new_account.interest)
-            {
-                stats.interest.increment(interest);
-            }
-            if (new_account.country)
-            {
-                stats.country.increment(new_account.country);
-                stats.country_sex.increment(std::tie(new_account.country, new_account.is_male));
-                stats.country_status.increment(std::tie(new_account.country, new_account.status));
-            }
-            if (new_account.city)
-            {
-                stats.city.increment(new_account.city);
-                stats.city_sex.increment(std::tie(new_account.city, new_account.is_male));
-                stats.city_status.increment(std::tie(new_account.city, new_account.status));
-            }
-        }
-
         account.insert(account.end(), std::move(new_account));
     }
 
     void build_indicies()
     {
-        stats.sort();
         auto &index = account.get<id_tag>();
         for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
         {
             auto &account = *account_it;
             Account::interest_mask_t interest_mask;
-            for (auto &account_interest : account.interest)
+            for (auto &account_interest : account.interest_list)
             {
                 interest[account_interest].push_back(account_it);
                 auto bit = std::distance(interest_list.begin(), std::lower_bound(interest_list.begin(), interest_list.end(), account_interest));
@@ -309,9 +215,9 @@ struct DB
                 a.interest_mask = interest_mask;
             });
 
-            for (auto &like : account.like)
+            for (auto &like : account.like_list)
             {
-                liked_by[like].push_back(account_it);
+                liked_by[like.id].emplace_back(account_it);
             }
 
             //if (account.interest.size() > 0)
@@ -330,11 +236,6 @@ struct DB
             //        return account.is_more_compatible(a.account(), b.account());
             //    });
             //}
-        }
-
-        for (auto &account : liked_by)
-        {
-            account.second.erase(std::unique(account.second.begin(), account.second.end()), account.second.end());
         }
     }
 };

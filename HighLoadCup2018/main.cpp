@@ -10,6 +10,7 @@
 #include "RequestHandler/FilterAccounts.h"
 #include "RequestHandler/GroupAccounts.h"
 #include "RequestHandler/RecommendForAccount.h"
+#include "RequestHandler/SuggestForAccount.h"
 
 #include "PerformanceTimer.h"
 

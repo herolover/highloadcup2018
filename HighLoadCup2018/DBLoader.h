@@ -51,13 +51,13 @@ public:
     {
         std::string_view value(raw_value, length);
 
-        switch (state)
+        switch (_state)
         {
         case State::KEY:
         {
             if (value == "accounts")
             {
-                state = State::ACCOUNT_KEY;
+                _state = State::ACCOUNT_KEY;
             }
             else
             {
@@ -88,7 +88,7 @@ public:
             auto key_list_it = key_list.find(value);
             if (key_list_it != key_list.end())
             {
-                state = key_list_it->second;
+                _state = key_list_it->second;
             }
             else
             {
@@ -97,41 +97,41 @@ public:
         }
         break;
         case State::EMAIL:
-            account.email = value;
-            account.email_domain = account.email.substr(account.email.find('@') + 1);
-            state = State::ACCOUNT_KEY;
+            _account.email = value;
+            _account.email_domain = _account.email.substr(_account.email.find('@') + 1);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::FIRST_NAME:
-            account.first_name = value;
-            state = State::ACCOUNT_KEY;
+            _account.first_name = value;
+            _state = State::ACCOUNT_KEY;
             break;
         case State::SECOND_NAME:
-            account.second_name = value;
-            state = State::ACCOUNT_KEY;
+            _account.second_name = value;
+            _state = State::ACCOUNT_KEY;
             break;
         case State::PHONE:
-            account.phone = value;
-            account.phone_code = account.phone.substr(account.phone.find('(') + 1, 3);
-            state = State::ACCOUNT_KEY;
+            _account.phone = value;
+            _account.phone_code = _account.phone.substr(_account.phone.find('(') + 1, 3);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::SEX:
-            account.is_male = convert_sex(value);
-            state = State::ACCOUNT_KEY;
+            _account.is_male = convert_sex(value);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::COUNTRY:
-            account.country = value;
-            state = State::ACCOUNT_KEY;
+            _account.country = value;
+            _state = State::ACCOUNT_KEY;
             break;
         case State::CITY:
-            account.city = value;
-            state = State::ACCOUNT_KEY;
+            _account.city = value;
+            _state = State::ACCOUNT_KEY;
             break;
         case State::STATUS:
-            account.status = convert_account_status(value);
-            state = State::ACCOUNT_KEY;
+            _account.status = convert_account_status(value);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            account.interest.push_back(value);
+            _account.add_interest(value);
             break;
         case State::PREMIUM_KEY:
         {
@@ -144,7 +144,7 @@ public:
             auto key_list_it = key_list.find(value);
             if (key_list_it != key_list.end())
             {
-                state = key_list_it->second;
+                _state = key_list_it->second;
             }
             else
             {
@@ -163,7 +163,7 @@ public:
             auto key_list_it = key_list.find(value);
             if (key_list_it != key_list.end())
             {
-                state = key_list_it->second;
+                _state = key_list_it->second;
             }
             else
             {
@@ -180,12 +180,12 @@ public:
 
     bool Int(int32_t value)
     {
-        switch (state)
+        switch (_state)
         {
         case DBLoader::State::BIRTH:
-            account.birth = value;
-            account.birth_year = get_year(value);
-            state = State::ACCOUNT_KEY;
+            _account.birth = value;
+            _account.birth_year = get_year(value);
+            _state = State::ACCOUNT_KEY;
             break;
         default:
             return false;
@@ -196,38 +196,37 @@ public:
 
     bool Uint(uint32_t value)
     {
-        switch (state)
+        switch (_state)
         {
         case State::ID:
-            account.id = value;
-            state = State::ACCOUNT_KEY;
+            _account.id = value;
+            _state = State::ACCOUNT_KEY;
             break;
         case State::BIRTH:
-            account.birth = value;
-            account.birth_year = get_year(value);
-            state = State::ACCOUNT_KEY;
+            _account.birth = value;
+            _account.birth_year = get_year(value);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::JOINED:
-            account.joined = value;
-            account.joined_year = get_year(value);
-            state = State::ACCOUNT_KEY;
+            _account.joined = value;
+            _account.joined_year = get_year(value);
+            _state = State::ACCOUNT_KEY;
             break;
         case State::PREMIUM_START:
-            account.premium_start = value;
-            state = State::PREMIUM_KEY;
+            _account.premium_start = value;
+            _state = State::PREMIUM_KEY;
             break;
         case State::PREMIUM_FINISH:
-            account.premium_finish = value;
-            state = State::PREMIUM_KEY;
+            _account.premium_finish = value;
+            _state = State::PREMIUM_KEY;
             break;
         case State::LIKE_ID:
-            //account.like.back().id = value;
-            account.like.push_back(value);
-            state = State::LIKE_KEY;
+            _like_id = value;
+            _state = State::LIKE_KEY;
             break;
         case State::LIKE_TS:
-            //account.like.back().ts = value;
-            state = State::LIKE_KEY;
+            _like_ts = value;
+            _state = State::LIKE_KEY;
             break;
         default:
             return false;
@@ -236,32 +235,24 @@ public:
         return true;
     }
 
-    bool StartObject()
-    {
-        if (state == State::LIKE_KEY)
-        {
-            //account.like.emplace_back();
-        }
-
-        return true;
-    }
-
     bool EndObject(rj::SizeType)
     {
-        if (state == State::PREMIUM_KEY)
+        if (_state == State::LIKE_KEY)
         {
-            if (account.premium_start != 0 && account.premium_finish != 0)
-            {
-                account.premium_status = _current_time > account.premium_start && _current_time < account.premium_finish ? Account::PremiumStatus::ACTIVE : Account::PremiumStatus::EXPIRED;
-            }
-            state = State::ACCOUNT_KEY;
+            _account.add_like(_like_id, _like_ts);
         }
-        else if (state == State::ACCOUNT_KEY)
+        else if (_state == State::PREMIUM_KEY)
         {
-            std::sort(account.interest.begin(), account.interest.end());
-            std::sort(account.like.begin(), account.like.end());
-            _db.add_account(std::move(account));
-            account = {};
+            if (_account.premium_start != 0 && _account.premium_finish != 0)
+            {
+                _account.premium_status = _current_time > _account.premium_start && _current_time < _account.premium_finish ? Account::PremiumStatus::ACTIVE : Account::PremiumStatus::EXPIRED;
+            }
+            _state = State::ACCOUNT_KEY;
+        }
+        else if (_state == State::ACCOUNT_KEY)
+        {
+            _db.add_account(std::move(_account));
+            _account = {};
         }
 
         return true;
@@ -269,21 +260,23 @@ public:
 
     bool EndArray(rj::SizeType)
     {
-        if (state == State::INTEREST || state == State::LIKE_KEY)
+        if (_state == State::INTEREST || _state == State::LIKE_KEY)
         {
-            state = State::ACCOUNT_KEY;
+            _state = State::ACCOUNT_KEY;
         }
-        else if (state == State::ACCOUNT_KEY)
+        else if (_state == State::ACCOUNT_KEY)
         {
-            state = State::KEY;
+            _state = State::KEY;
         }
 
         return true;
     }
 
 private:
-    State state = State::KEY;
-    Account account;
+    State _state = State::KEY;
+    Account _account;
+    uint32_t _like_id;
+    int32_t _like_ts;
 
     DB &_db;
     std::time_t _current_time;
