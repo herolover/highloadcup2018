@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../RequestHandler.h"
-#include "../Convert.h"
 
 #include <rapidjson/rapidjson.h>
 
@@ -29,8 +28,8 @@ struct RequestHandler<SuggestForAccount>
         {
             rapidjson::Value json_account(rapidjson::kObjectType);
             json_account.AddMember("id", account.id, _document.GetAllocator());
-            json_account.AddMember("email", rapidjson::Value(rapidjson::StringRef(account.email)), _document.GetAllocator());
-            json_account.AddMember("status", rapidjson::Value(rapidjson::StringRef(convert_account_status(account.status))), _document.GetAllocator());
+            json_account.AddMember("email", t_get_json_value<f_email>()(account, _document.GetAllocator()));
+            json_account.AddMember("status", t_get_json_value<f_status>()(account, _document.GetAllocator()));
             if (account.first_name)
             {
                 json_account.AddMember("fname", t_get_json_value<f_first_name>()(account, _document.GetAllocator()), _document.GetAllocator());
