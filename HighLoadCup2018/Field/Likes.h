@@ -62,16 +62,9 @@ struct t_select<f_likes, m_contains>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
-        std::vector<std::pair<IterType, IterType>> range_list;
-
-        for (auto &id : std::get<std::vector<uint32_t>>(value))
-        {
-            auto &id_list = db.liked_by[id];
-            range_list.push_back(std::make_pair(id_list.rbegin(), id_list.rend()));
-        }
-
-        handler(std::make_pair(intersection_iter<true, IterType>(range_list), intersection_iter<true, IterType>(range_list, true)));
+        auto &id_list = std::get<std::vector<uint32_t>>(value);
+        auto &account_list = db.liked_by[id_list.front()];
+        handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
 
