@@ -58,18 +58,18 @@ struct RequestHandler<SuggestForAccount>
         std::size_t _limit;
     };
 
-    struct Compatibility
+    struct Similarity
     {
         DB::AccountReference with_account;
         int32_t value;
 
-        Compatibility(DB::AccountReference with_account, int32_t value)
+        Similarity(DB::AccountReference with_account, int32_t value)
             : with_account(with_account)
             , value(value)
         {
         }
 
-        bool operator<(const Compatibility &c) const
+        bool operator<(const Similarity &c) const
         {
             return value < c.value;
         }
@@ -77,7 +77,7 @@ struct RequestHandler<SuggestForAccount>
 
     static void handle(DB &db, SuggestForAccount &request, HttpServer::HttpResponse &response)
     {
-        std::vector<Compatibility> compatibility_list;
+        std::vector<Similarity> similarity_list;
 
         auto &index = db.account.get<DB::id_tag>();
         auto &account = index.find(request.search.account_id)->account();
@@ -114,11 +114,11 @@ struct RequestHandler<SuggestForAccount>
                     ++ts_counter;
                 }
 
-                compatibility_list.emplace_back(with_account, std::abs(like.ts - sum_ts / ts_counter));
+                similarity_list.emplace_back(with_account, std::abs(like.ts - sum_ts / ts_counter));
             }
         }
 
-        std::sort(compatibility_list.begin(), compatibility_list.end());
+        std::sort(similarity_list.begin(), similarity_list.end());
 
         JSONResult result(request.search.limit);
 
@@ -131,7 +131,7 @@ struct RequestHandler<SuggestForAccount>
             }
             while (it != last && it->id == id);
         };
-        for (auto it = compatibility_list.begin(); it != compatibility_list.end() && !result.is_full(); ++it)
+        for (auto it = similarity_list.begin(); it != similarity_list.end() && !result.is_full(); ++it)
         {
             auto &with_account = it->with_account.account();
 
