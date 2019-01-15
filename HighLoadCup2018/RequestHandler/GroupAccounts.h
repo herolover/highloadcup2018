@@ -53,7 +53,7 @@ struct RequestHandler<GroupAccounts>
         {
             document.AddMember("groups", std::move(group_array), document.GetAllocator());
 
-            rapidjson::Writer writer(buffer);
+            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(buffer);
             document.Accept(writer);
 
             return buffer.GetString();
@@ -201,28 +201,15 @@ struct RequestHandler<GroupAccounts>
 
     static void handle(DB &db, GroupAccounts &request, HttpServer::HttpResponse &response)
     {
-        using field_priority_list = boost::mp11::mp_list<f_likes, f_city, f_interests, f_country, f_birth, f_joined, f_status, f_sex>;
-
-        auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
+        if (request.filter.empty())
         {
-            auto a_field_value = std::visit([](auto &&field)
-            {
-                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
-            }, a.field);
-
-            auto b_field_value = std::visit([](auto &&field)
-            {
-                return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
-            }, b.field);
-
-            return a_field_value < b_field_value;
-        });
-
-        if (select_by_filter_it != request.filter.end())
+        }
+        else if (request.filter.size() == 1 && std::holds_alternative<f_likes>(request.filter.front().field))
         {
-            for_field_method(select_by_filter_it->field, select_by_filter_it->method, [&db, &request, &response, &select_by_filter_it](auto &&field, auto &&method)
+            auto &likes_filter = request.filter.front();
+            for_field_method(likes_filter.field, likes_filter.method, [&db, &request, &response, &likes_filter](auto &&field, auto &&method)
             {
-                t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, select_by_filter_it->value, [&db, &request, &response](auto &&range)
+                t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, likes_filter.value, [&db, &request, &response](auto &&range)
                 {
                     filter(request, response, range.first, range.second);
                 });
@@ -230,8 +217,6 @@ struct RequestHandler<GroupAccounts>
         }
         else
         {
-            auto &index = db.account.get<DB::id_tag>();
-            filter(request, response, index.rbegin(), index.rend());
         }
     }
 };

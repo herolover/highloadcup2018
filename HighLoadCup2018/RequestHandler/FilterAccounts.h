@@ -60,7 +60,7 @@ struct RequestHandler<FilterAccounts>
         {
             document.AddMember("accounts", std::move(account_array), document.GetAllocator());
 
-            rapidjson::Writer writer(buffer);
+            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(buffer);
             document.Accept(writer);
 
             return buffer.GetString();
