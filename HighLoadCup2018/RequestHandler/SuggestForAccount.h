@@ -28,8 +28,8 @@ struct RequestHandler<SuggestForAccount>
         {
             rapidjson::Value json_account(rapidjson::kObjectType);
             json_account.AddMember("id", account.id, _document.GetAllocator());
-            json_account.AddMember("email", t_get_json_value<f_email>()(account, _document.GetAllocator()));
-            json_account.AddMember("status", t_get_json_value<f_status>()(account, _document.GetAllocator()));
+            json_account.AddMember("email", t_get_json_value<f_email>()(account, _document.GetAllocator()), _document.GetAllocator());
+            json_account.AddMember("status", t_get_json_value<f_status>()(account, _document.GetAllocator()), _document.GetAllocator());
             if (account.first_name)
             {
                 json_account.AddMember("fname", t_get_json_value<f_first_name>()(account, _document.GetAllocator()), _document.GetAllocator());
