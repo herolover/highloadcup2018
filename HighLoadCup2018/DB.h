@@ -154,22 +154,23 @@ struct DB
 
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
-    std::vector<std::string> interest_list;
+    std::vector<std::unique_ptr<std::string>> interest_list;
     std::map<std::string_view, std::vector<AccountReference>> interest;
 
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
 
     std::string_view add_interest(std::string_view interest)
     {
-        std::string string_interest(interest.data(), interest.size());
-
-        auto it = std::lower_bound(interest_list.begin(), interest_list.end(), string_interest);
-        if (it == interest_list.end() || *it != string_interest)
+        auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, [](auto &&a, auto &&b)
         {
-            it = interest_list.insert(it, std::move(string_interest));
+            return *a < b;
+        });
+        if (it == interest_list.end() || **it != interest)
+        {
+            it = interest_list.insert(it, std::make_unique<std::string>(interest.data(), interest.size()));
         }
 
-        return std::string_view(it->data(), it->size());
+        return std::string_view((*it)->data(), (*it)->size());
     }
 
     void add_account(Account &&new_account)
@@ -205,8 +206,11 @@ struct DB
     Account::interest_mask_t get_interest_mask(std::string_view interest)
     {
         Account::interest_mask_t mask;
-        auto interest_it = std::lower_bound(interest_list.begin(), interest_list.end(), interest);
-        if (*interest_it == interest)
+        auto interest_it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, [](auto &&a, auto &&b)
+        {
+            return *a < b;
+        });
+        if (**interest_it == interest)
         {
             mask[std::distance(interest_list.begin(), interest_it)] = true;
         }
