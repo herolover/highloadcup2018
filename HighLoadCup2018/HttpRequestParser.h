@@ -323,6 +323,10 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                         result = std::move(suggest);
                     }
                 }
+                else
+                {
+                    std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
+                }
             }
         }
     }
