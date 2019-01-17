@@ -43,12 +43,10 @@ struct Like
 
 struct Account
 {
-    using email_t = shared_string<0>;
-    using first_name_t = shared_string<1>;
-    using second_name_t = shared_string<2>;
-    using country_t = shared_string<3>;
-    using city_t = shared_string<4>;
-    using interest_t = shared_string<5>;
+    using first_name_t = shared_string<0>;
+    using second_name_t = shared_string<1>;
+    using country_t = shared_string<2>;
+    using city_t = shared_string<3>;
     using interest_mask_t = std::bitset<128>;
 
     enum class Status : uint8_t
@@ -80,7 +78,7 @@ struct Account
     int32_t joined;
     uint16_t joined_year;
     Status status;
-    std::vector<interest_t> interest_list;
+    std::vector<std::string_view> interest_list;
     interest_mask_t interest_mask;
     int32_t premium_start = 0;
     int32_t premium_finish = 0;
@@ -113,7 +111,7 @@ struct Account
         like_list.emplace(it, account_id, like_ts);
     }
 
-    void add_interest(const interest_t &interest)
+    void add_interest(std::string_view interest)
     {
         auto it = std::upper_bound(interest_list.begin(), interest_list.end(), interest);
         interest_list.insert(it, interest);

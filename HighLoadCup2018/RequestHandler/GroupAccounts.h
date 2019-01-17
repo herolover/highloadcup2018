@@ -140,7 +140,7 @@ struct RequestHandler<GroupAccounts>
                         {
                             for (auto &interest : account.interest_list)
                             {
-                                count_key((std::string_view)*interest);
+                                count_key(interest);
                             }
                         }
                         else if constexpr(std::is_same_v<f_country, field_type>)

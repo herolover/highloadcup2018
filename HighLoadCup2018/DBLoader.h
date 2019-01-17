@@ -131,7 +131,7 @@ public:
             _state = State::ACCOUNT_KEY;
             break;
         case State::INTEREST:
-            _account.add_interest(value);
+            _account.add_interest(_db.add_interest(value));
             break;
         case State::PREMIUM_KEY:
         {

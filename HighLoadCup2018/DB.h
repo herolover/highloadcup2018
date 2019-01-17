@@ -154,21 +154,26 @@ struct DB
 
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
-    std::vector<Account::interest_t> interest_list;
-    std::map<Account::interest_t, std::vector<AccountReference>, common_less> interest;
+    std::vector<std::string> interest_list;
+    std::map<std::string_view, std::vector<AccountReference>> interest;
 
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
 
+    std::string_view add_interest(std::string_view interest)
+    {
+        std::string string_interest(interest.data(), interest.size());
+
+        auto it = std::lower_bound(interest_list.begin(), interest_list.end(), string_interest);
+        if (it == interest_list.end() || *it != string_interest)
+        {
+            it = interest_list.insert(it, std::move(string_interest));
+        }
+
+        return std::string_view(it->data(), it->size());
+    }
+
     void add_account(Account &&new_account)
     {
-        for (auto &interest : new_account.interest_list)
-        {
-            auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest);
-            if (it == interest_list.end() || **it != *interest)
-            {
-                interest_list.insert(it, interest);
-            }
-        }
         if (new_account.first_name)
         {
             auto &first_name_list = new_account.is_male ? male_first_name : female_first_name;
@@ -179,14 +184,28 @@ struct DB
             }
         }
 
-        account.insert(account.end(), std::move(new_account));
+        auto it = account.get<id_tag>().insert(std::move(new_account));
+        if (it.second)
+        {
+            AccountReference account_reference(it.first);
+            for (auto &account_interest : account_reference.account().interest_list)
+            {
+                auto &interest_account_list = interest[account_interest];
+                interest_account_list.insert(std::upper_bound(interest_account_list.begin(), interest_account_list.end(), account_reference), account_reference);
+            }
+
+            for (auto &like : account_reference.account().like_list)
+            {
+                auto &liked_by_account_list = liked_by[like.id];
+                liked_by_account_list.insert(std::upper_bound(liked_by_account_list.begin(), liked_by_account_list.end(), account_reference), account_reference);
+            }
+        }
     }
 
-    template<class T>
-    Account::interest_mask_t get_interest_mask(const T &interest)
+    Account::interest_mask_t get_interest_mask(std::string_view interest)
     {
         Account::interest_mask_t mask;
-        auto interest_it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, common_less());
+        auto interest_it = std::lower_bound(interest_list.begin(), interest_list.end(), interest);
         if (*interest_it == interest)
         {
             mask[std::distance(interest_list.begin(), interest_it)] = true;
@@ -199,7 +218,7 @@ struct DB
         return mask;
     }
 
-    void build_indicies()
+    void compute_interest_mask()
     {
         auto &index = account.get<id_tag>();
         for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
@@ -208,18 +227,12 @@ struct DB
             Account::interest_mask_t interest_mask;
             for (auto &account_interest : account.interest_list)
             {
-                interest[account_interest].push_back(account_it);
                 interest_mask |= get_interest_mask(account_interest);
             }
             index.modify(account_it, [&interest_mask](Account &a)
             {
                 a.interest_mask = interest_mask;
             });
-
-            for (auto &like : account.like_list)
-            {
-                liked_by[like.id].emplace_back(account_it);
-            }
 
             //if (account.interest.size() > 0)
             //{

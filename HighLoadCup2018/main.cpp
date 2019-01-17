@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         std::fclose(fp);
     }
 
-    db.build_indicies();
+    db.compute_interest_mask();
 
     std::cout << "Loaded: " << db.account.size() << " " << timer.reset() * 1000 << std::endl;
 
