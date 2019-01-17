@@ -284,7 +284,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                     if (key_value[0] == "limit"sv)
                     {
                         auto[p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), search.limit);
-                        if (ec == std::errc())
+                        if (ec == std::errc() && search.limit != 0)
                         {
                             has_limit = true;
                         }

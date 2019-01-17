@@ -5,6 +5,8 @@
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -118,6 +120,36 @@ struct DB
         {
         }
 
+        uint32_t id() const
+        {
+            return _it->id;
+        }
+
+        std::string_view city() const
+        {
+            return *_it->city;
+        }
+
+        std::string_view country() const
+        {
+            return *_it->country;
+        }
+
+        bool is_male() const
+        {
+            return _it->is_male;
+        }
+
+        Account::Status status() const
+        {
+            return _it->status;
+        }
+
+        Account::PremiumStatus premium_status() const
+        {
+            return _it->premium_status;
+        }
+
         const Account &account() const
         {
             return *_it;
@@ -152,10 +184,27 @@ struct DB
         AccountIt _it;
     };
 
+    struct recommend_tag {};
+    // *INDENT-OFF*
+    using RecommendIndex = mi::multi_index_container<AccountReference,
+        mi::indexed_by<
+            mi::ordered_non_unique<
+                mi::tag<recommend_tag>,
+                mi::composite_key<AccountReference,
+                    mi::const_mem_fun<AccountReference, bool, &AccountReference::is_male>,
+                    mi::const_mem_fun<AccountReference, Account::PremiumStatus, &AccountReference::premium_status>,
+                    mi::const_mem_fun<AccountReference, Account::Status, &AccountReference::status>
+                >
+            >
+        >
+    >;
+    // *INDENT-ON*
+
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
     std::vector<std::unique_ptr<std::string>> interest_list;
     std::map<std::string_view, std::vector<AccountReference>> interest;
+    std::map<std::string_view, RecommendIndex> interest_recommendations;
 
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
 
@@ -193,6 +242,7 @@ struct DB
             {
                 auto &interest_account_list = interest[account_interest];
                 interest_account_list.insert(std::upper_bound(interest_account_list.begin(), interest_account_list.end(), account_reference), account_reference);
+                interest_recommendations[account_interest].insert(account_reference);
             }
 
             for (auto &like : account_reference.account().like_list)
@@ -237,23 +287,6 @@ struct DB
             {
                 a.interest_mask = interest_mask;
             });
-
-            //if (account.interest.size() > 0)
-            //{
-            //    auto &account_recommendation = recommendation[account.id];
-            //    for (auto account_it_1 = index.begin(); account_it_1 != index.end(); ++account_it_1)
-            //    {
-            //        if (account_it != account_it_1 && account.is_male != account_it_1->is_male && account.common_interest_size(*account_it_1) > 0)
-            //        {
-            //            account_recommendation.push_back(account_it_1);
-            //        }
-            //    }
-
-            //    std::sort(account_recommendation.begin(), account_recommendation.end(), [&account](auto &&a, auto &&b)
-            //    {
-            //        return account.is_more_compatible(a.account(), b.account());
-            //    });
-            //}
         }
     }
 };

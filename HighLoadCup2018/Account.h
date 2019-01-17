@@ -58,9 +58,9 @@ struct Account
 
     enum class PremiumStatus : uint8_t
     {
-        NO = 0,
-        EXPIRED = 1,
-        ACTIVE = 2
+        ACTIVE = 0,
+        NO = 1,
+        EXPIRED = 2,
     };
 
     uint32_t id;
@@ -116,79 +116,4 @@ struct Account
         auto it = std::upper_bound(interest_list.begin(), interest_list.end(), interest);
         interest_list.insert(it, interest);
     }
-
-    //std::size_t common_interest_size(const Account &a) const
-    //{
-    //    auto first1 = interest.begin();
-    //    auto last1 = interest.end();
-    //    auto first2 = a.interest.begin();
-    //    auto last2 = a.interest.end();
-
-    //    std::size_t counter = 0;
-    //    while (first1 != last1 && first2 != last2)
-    //    {
-    //        if (string_view_compare()(*first1, *first2))
-    //        {
-    //            ++first1;
-    //        }
-    //        else if (string_view_compare()(*first2, *first1))
-    //        {
-    //            ++first2;
-    //        }
-    //        else
-    //        {
-    //            ++counter;
-    //            ++first1;
-    //            ++first2;
-    //        }
-    //    }
-
-    //    return counter;
-    //}
-
-    int8_t status_compatibility(const Account &a) const
-    {
-        if (status == Status::FREE && a.status == Status::FREE)
-        {
-            return 4;
-        }
-        else if (status == Status::FREE && a.status == Status::COMPLICATED
-                 || status == Status::COMPLICATED && a.status == Status::FREE)
-        {
-            return 3;
-        }
-        else if (status == Status::FREE && a.status == Status::BUSY
-                 || status == Status::BUSY && a.status == Status::FREE)
-        {
-            return 2;
-        }
-        else if (status == Status::COMPLICATED && a.status == Status::BUSY
-                 || status == Status::BUSY && a.status == Status::COMPLICATED)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    int32_t age_difference(const Account &a) const
-    {
-        return std::abs(birth - a.birth);
-    }
-
-    //bool is_more_compatible(const Account &a, const Account &b) const
-    //{
-    //    bool is_a_premium_now = a.premium_status == PremiumStatus::ACTIVE;
-    //    bool is_b_premium_now = b.premium_status == PremiumStatus::ACTIVE;
-    //    auto a_status_compatibility = status_compatibility(a);
-    //    auto b_status_compatibility = status_compatibility(b);
-    //    auto a_common_interests = common_interest_size(a);
-    //    auto b_common_interests = common_interest_size(b);
-    //    auto a_age_difference = age_difference(a);
-    //    auto b_age_difference = age_difference(b);
-
-    //    return std::tie(is_a_premium_now, a_status_compatibility, a_common_interests, b_age_difference, b.id) > std::tie(is_b_premium_now, b_status_compatibility, b_common_interests, a_age_difference, a.id);
-    //}
 };

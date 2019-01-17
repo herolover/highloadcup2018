@@ -44,7 +44,7 @@ public:
     DBLoader(DB &db)
         : _db(db)
     {
-        _current_time = std::time(nullptr);
+        _current_time = 1545834025;
     }
 
     bool String(const char *raw_value, rj::SizeType length, bool)

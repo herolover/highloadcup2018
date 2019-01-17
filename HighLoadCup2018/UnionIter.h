@@ -3,12 +3,13 @@
 #include <vector>
 #include <utility>
 
-template<bool ReverseOrder, class ForwardIt>
+template<bool ReverseOrder, class ForwardIt, class Compare = std::less<>>
 class union_iter
 {
 public:
-    union_iter(std::vector<std::pair<ForwardIt, ForwardIt>> &range_list, bool go_to_end = false)
+    union_iter(std::vector<std::pair<ForwardIt, ForwardIt>> &range_list, bool go_to_end = false, Compare comp = Compare())
         : _range_list((range_list))
+        , _comp(comp)
     {
         if (go_to_end)
         {
@@ -51,19 +52,20 @@ public:
 private:
     void next_iter()
     {
-        _current_range_it = std::min_element(_range_list.begin(), _range_list.end(), [](auto &&left_it, auto &&right_it)
+        _current_range_it = std::min_element(_range_list.begin(), _range_list.end(), [this](auto &&left_it, auto &&right_it)
         {
             if constexpr(ReverseOrder)
             {
-                return left_it.first != left_it.second && (right_it.first == right_it.second || *right_it.first < *left_it.first);
+                return left_it.first != left_it.second && (right_it.first == right_it.second || _comp(*right_it.first, *left_it.first));
             }
             else
             {
-                return left_it.first != left_it.second && (right_it.first == right_it.second || *left_it.first < *right_it.first);
+                return left_it.first != left_it.second && (right_it.first == right_it.second || _comp(*left_it.first, *right_it.first));
             }
         });
     }
 
     std::vector<std::pair<ForwardIt, ForwardIt>> _range_list;
+    Compare _comp;
     typename std::vector<std::pair<ForwardIt, ForwardIt>>::iterator _current_range_it;
 };
