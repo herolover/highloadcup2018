@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         auto parsed_request = parse_http_request(db, request, std::string_view(decoded_target.data(), decoded_target.size()));
         std::visit([&db, &response](auto &&request)
         {
-            RequestHandler<std::remove_reference_t<decltype(request)>>::handle(db, request, response);
+            RequestHandler<std::decay_t<decltype(request)>>::handle(db, request, response);
         }, parsed_request);
     });
 
@@ -70,26 +70,30 @@ int main(int argc, char *argv[])
     {
         io_context.run();
 
-        std::cout << "thread 1 finished" << std::endl;
+        std::cout << "io_context 1 finished" << std::endl;
     });
     auto t2 = std::thread([&io_context]()
     {
         io_context.run();
 
-        std::cout << "thread 2 finished" << std::endl;
+        std::cout << "io_context 2 finished" << std::endl;
     });
     auto t3 = std::thread([&io_context]()
     {
         io_context.run();
 
-        std::cout << "thread 3 finished" << std::endl;
+        std::cout << "io_context 3 finished" << std::endl;
     });
 
     io_context.run();
 
+    std::cout << "io_context 0 finished" << std::endl;
+
     t3.join();
     t2.join();
     t1.join();
+
+    std::cout << "all threads are joined" << std::endl;
 
     return 0;
 }

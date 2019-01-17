@@ -54,28 +54,6 @@ struct t_value<f_birth, m_year>
 };
 
 template<>
-struct t_select<f_birth, m_lt>
-{
-    template<class Handler>
-    void operator()(DB &db, const Value &date, Handler &&handler) const
-    {
-        auto &index = db.account.get<DB::birth_tag>();
-        handler(make_reverse_range(std::make_pair(index.begin(), index.lower_bound(std::get<int32_t>(date)))));
-    }
-};
-
-template<>
-struct t_select<f_birth, m_gt>
-{
-    template<class Handler>
-    void operator()(DB &db, const Value &date, Handler &&handler) const
-    {
-        auto &index = db.account.get<DB::birth_tag>();
-        handler(make_reverse_range(std::make_pair(index.upper_bound(std::get<int32_t>(date)), index.end())));
-    }
-};
-
-template<>
 struct t_select<f_birth, m_year>
 {
     template<class Handler>

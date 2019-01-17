@@ -33,11 +33,9 @@ struct DB
     struct phone_tag {};
     struct phone_code_tag {};
     struct sex_tag {};
-    struct birth_tag {};
     struct birth_year_tag {};
     struct country_tag {};
     struct city_tag {};
-    struct joined_tag {};
     struct joined_year_tag {};
     struct status_tag {};
     struct premium_tag {};
@@ -76,11 +74,6 @@ struct DB
                 common_less
             >,
             mi::ordered_non_unique<
-                mi::tag<phone_tag>,
-                mi::member<Account, std::string, &Account::phone>,
-                common_less
-            >,
-            mi::ordered_non_unique<
                 mi::tag<phone_code_tag>,
                 mi::member<Account, std::string, &Account::phone_code>,
                 common_less
@@ -88,10 +81,6 @@ struct DB
             mi::ordered_non_unique<
                 mi::tag<sex_tag>,
                 mi::member<Account, bool, &Account::is_male>
-            >,
-            mi::ordered_non_unique<
-                mi::tag<birth_tag>,
-                mi::member<Account, int32_t, &Account::birth>
             >,
             mi::ordered_non_unique<
                 mi::tag<birth_year_tag>,
@@ -106,10 +95,6 @@ struct DB
                 mi::tag<city_tag>,
                 mi::member<Account, Account::city_t, &Account::city>,
                 common_less
-            >,
-            mi::ordered_non_unique<
-                mi::tag<joined_tag>,
-                mi::member<Account, int32_t, &Account::joined>
             >,
             mi::ordered_non_unique<
                 mi::tag<joined_year_tag>,
