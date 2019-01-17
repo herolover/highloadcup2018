@@ -182,6 +182,23 @@ struct DB
         account.insert(account.end(), std::move(new_account));
     }
 
+    template<class T>
+    Account::interest_mask_t get_interest_mask(const T &interest)
+    {
+        Account::interest_mask_t mask;
+        auto interest_it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, common_less());
+        if (*interest_it == interest)
+        {
+            mask[std::distance(interest_list.begin(), interest_it)] = true;
+        }
+        else
+        {
+            mask[mask.size() - 1] = true;
+        }
+
+        return mask;
+    }
+
     void build_indicies()
     {
         auto &index = account.get<id_tag>();
@@ -192,8 +209,7 @@ struct DB
             for (auto &account_interest : account.interest_list)
             {
                 interest[account_interest].push_back(account_it);
-                auto bit = std::distance(interest_list.begin(), std::lower_bound(interest_list.begin(), interest_list.end(), account_interest));
-                interest_mask[bit] = true;
+                interest_mask |= get_interest_mask(account_interest);
             }
             index.modify(account_it, [&interest_mask](Account &a)
             {

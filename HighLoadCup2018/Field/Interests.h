@@ -14,6 +14,15 @@ struct t_has_method<f_interests, M>
 };
 
 template<>
+struct t_value<f_interests, m_eq>
+{
+    Value operator()(DB &db, const std::string_view &value) const
+    {
+        return std::make_pair(value, db.get_interest_mask(value));
+    }
+};
+
+template<>
 struct t_value<f_interests, m_contains>
 {
     Value operator()(DB &db, const std::string_view &value) const
@@ -22,20 +31,10 @@ struct t_value<f_interests, m_contains>
         Account::interest_mask_t mask;
         for (auto &interest : interest_list)
         {
-            auto interest_it = std::lower_bound(db.interest_list.begin(), db.interest_list.end(), interest, common_less());
-            if (**interest_it == interest)
-            {
-                auto bit = std::distance(db.interest_list.begin(), interest_it);
-                mask[bit] = true;
-            }
-            else
-            {
-                mask.flip();
-                break;
-            }
+            mask |= db.get_interest_mask(interest);
         }
 
-        return std::make_pair(interest_list, mask);
+        return std::make_pair(std::move(interest_list), mask);
     }
 };
 
@@ -47,7 +46,13 @@ struct t_value<f_interests, m_any>
         auto interest_list = split(value);
         std::sort(interest_list.begin(), interest_list.end());
 
-        return std::move(interest_list);
+        Account::interest_mask_t mask;
+        for (auto &interest : interest_list)
+        {
+            mask |= db.get_interest_mask(interest);
+        }
+
+        return std::make_pair(std::move(interest_list), mask);
     }
 };
 
@@ -57,7 +62,7 @@ struct t_select<f_interests, m_eq>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        auto &account_list = db.interest[std::get<std::string_view>(value)];
+        auto &account_list = db.interest[std::get<std::pair<std::string_view, Account::interest_mask_t>>(value).first];
         handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
@@ -83,7 +88,7 @@ struct t_select<f_interests, m_any>
         using IterType = std::vector<DB::AccountReference>::reverse_iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
-        for (auto &interest : std::get<std::vector<std::string_view>>(value))
+        for (auto &interest : std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).first)
         {
             auto &id_list = db.interest[interest];
             range_list.push_back(std::make_pair(id_list.rbegin(), id_list.rend()));
@@ -98,8 +103,8 @@ struct t_check<f_interests, m_eq>
 {
     bool operator()(const Account &account, const Value &value) const
     {
-        auto &interest = std::get<std::string_view>(value);
-        return std::binary_search(account.interest_list.begin(), account.interest_list.end(), interest, common_less());
+        auto &test_mask = std::get<std::pair<std::string_view, Account::interest_mask_t>>(value).second;
+        return (account.interest_mask & test_mask) == test_mask;
     }
 };
 
@@ -118,14 +123,7 @@ struct t_check<f_interests, m_any>
 {
     bool operator()(const Account &account, const Value &value) const
     {
-        for (auto &interest : std::get<std::vector<std::string_view>>(value))
-        {
-            if (std::binary_search(account.interest_list.begin(), account.interest_list.end(), interest, common_less()))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        auto &test_mask = std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).second;
+        return (account.interest_mask & test_mask).any();
     }
 };
