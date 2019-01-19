@@ -32,25 +32,30 @@ public:
 
                     boost::asio::spawn(_io_context, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
                     {
-                        std::string buffer_container;
-                        try
-                        {
-                            while (true)
-                            {
-                                HttpRequest request;
-                                auto buffer = boost::asio::dynamic_buffer(buffer_container);
-                                boost::beast::http::async_read(socket, buffer, request, yield);
+                        boost::system::error_code ec;
 
-                                HttpResponse response;
-                                response.set(boost::beast::http::field::connection, "keep-alive");
-                                response.set(boost::beast::http::field::content_type, "text/plain");
-                                handler(request, response);
-                                boost::beast::http::async_write(socket, response, yield);
-                            }
-                        }
-                        catch (const std::exception &e)
+                        std::string buffer_container;
+                        while (true)
                         {
-                            std::cerr << e.what() << std::endl;
+                            HttpRequest request;
+                            auto buffer = boost::asio::dynamic_buffer(buffer_container);
+                            boost::beast::http::async_read(socket, buffer, request, yield[ec]);
+
+                            if (ec)
+                            {
+                                break;
+                            }
+
+                            HttpResponse response;
+                            response.set(boost::beast::http::field::connection, "keep-alive");
+                            response.set(boost::beast::http::field::content_type, "text/plain");
+                            handler(request, response);
+                            boost::beast::http::async_write(socket, response, yield[ec]);
+
+                            if (ec)
+                            {
+                                break;
+                            }
                         }
                     });
                 }
