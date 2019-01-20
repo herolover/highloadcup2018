@@ -74,6 +74,9 @@ struct AddAccount
 
 struct UpdateAccount
 {
+    uint32_t account_id;
+    const char *body;
+    std::size_t size;
 };
 
 struct AddLikes
@@ -341,6 +344,20 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
         }
         else if (target_parts.size() == 3)
         {
+            UpdateAccount update_account;
+            auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), update_account.account_id);
+
+            auto &index = db.account.get<DB::id_tag>();
+            if (ec == std::errc() && update_account.account_id > 0 && index.find(update_account.account_id) != index.end())
+            {
+                update_account.body = request.body().data();
+                update_account.size = request.body().size();
+                result = std::move(update_account);
+            }
+            else
+            {
+                std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
+            }
         }
     }
 

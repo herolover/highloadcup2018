@@ -134,5 +134,8 @@
     <ClInclude Include="AccountParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RequestHandler\UpdateAccount.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

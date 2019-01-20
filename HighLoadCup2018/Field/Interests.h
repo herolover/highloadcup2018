@@ -62,7 +62,7 @@ struct t_select<f_interests, m_eq>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        auto &account_list = db.interest[std::get<std::pair<std::string_view, Account::interest_mask_t>>(value).first];
+        auto &account_list = db.interest_account_list[std::get<std::pair<std::string_view, Account::interest_mask_t>>(value).first].get<DB::id_tag>();
         handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
@@ -74,7 +74,7 @@ struct t_select<f_interests, m_contains>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
         auto &interest_list = std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).first;
-        auto &account_list = db.interest[interest_list.front()];
+        auto &account_list = db.interest_account_list[interest_list.front()].get<DB::id_tag>();
         handler(std::make_pair(account_list.rbegin(), account_list.rend()));
     }
 };
@@ -85,12 +85,12 @@ struct t_select<f_interests, m_any>
     template<class Handler>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
-        using IterType = std::vector<DB::AccountReference>::reverse_iterator;
+        using IterType = typename DB::InterestIndex::index<DB::id_tag>::type::const_reverse_iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
 
         for (auto &interest : std::get<std::pair<std::vector<std::string_view>, Account::interest_mask_t>>(value).first)
         {
-            auto &id_list = db.interest[interest];
+            auto &id_list = db.interest_account_list[interest].get<DB::id_tag>();
             range_list.push_back(std::make_pair(id_list.rbegin(), id_list.rend()));
         }
 

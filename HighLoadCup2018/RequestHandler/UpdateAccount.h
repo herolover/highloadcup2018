@@ -8,22 +8,16 @@
 #include <rapidjson/memorystream.h>
 
 template<>
-struct RequestHandler<AddAccount>
+struct RequestHandler<UpdateAccount>
 {
-    static void handle(DB &db, AddAccount &request, HttpServer::HttpResponse &response)
+    static void handle(DB &db, UpdateAccount &request, HttpServer::HttpResponse &response)
     {
         bool is_valid = false;
-        static AccountParser parser(db, [&db, &is_valid](Account &&account)
+        static AccountParser parser(db, [&db, &request, &is_valid](Account &&account)
         {
-            if (account.id != 0
-                    && !account.email.empty()
-                    && account.sex != Account::Sex::INVALID
-                    && account.status != Account::Status::INVALID
-                    && account.premium_status != Account::PremiumStatus::INVALID)
-            {
-                account.interest_mask = db.get_interest_mask(account.interest_list);
-                is_valid = db.add_account(std::move(account));
-            }
+            account.id = request.account_id;
+            account.interest_mask = db.get_interest_mask(account.interest_list);
+            is_valid = db.update_account(std::move(account));
         }, AccountParserState::ACCOUNT_KEY);
         static rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
 
@@ -36,7 +30,7 @@ struct RequestHandler<AddAccount>
         }
         if (is_parsed && is_valid)
         {
-            response.result(boost::beast::http::status::created);
+            response.result(boost::beast::http::status::accepted);
             response.body() = "{}";
         }
         else

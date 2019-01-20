@@ -30,7 +30,8 @@ public:
                     boost::asio::ip::tcp::socket socket(_io_context);
                     _acceptor.async_accept(socket, yield);
 
-                    boost::asio::spawn(_io_context, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
+                    auto executor = socket.get_executor();
+                    boost::asio::spawn(executor, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
                     {
                         boost::system::error_code ec;
 

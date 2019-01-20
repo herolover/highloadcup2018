@@ -12,6 +12,7 @@
 #include "RequestHandler/RecommendForAccount.h"
 #include "RequestHandler/SuggestForAccount.h"
 #include "RequestHandler/AddAccount.h"
+#include "RequestHandler/UpdateAccount.h"
 
 #include "PerformanceTimer.h"
 

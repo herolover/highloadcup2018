@@ -133,11 +133,11 @@ struct RequestHandler<RecommendForAccount>
     {
         auto &account = db.account.get<DB::id_tag>().find(request.search.account_id)->account();
 
-        using IterType = typename DB::RecommendIndex::index<DB::recommend_tag>::type::iterator;
+        using IterType = typename DB::InterestIndex::index<DB::recommend_tag>::type::iterator;
         std::vector<std::pair<IterType, IterType>> range_list;
         for (auto &interest : account.interest_list)
         {
-            range_list.push_back(db.interest_recommendations[interest].equal_range(account.sex == Account::Sex::MALE ? Account::Sex::FEMALE : Account::Sex::MALE));
+            range_list.push_back(db.interest_account_list[interest].get<DB::recommend_tag>().equal_range(account.sex == Account::Sex::MALE ? Account::Sex::FEMALE : Account::Sex::MALE));
         }
 
         auto less = [](auto &&a, auto &&b)
