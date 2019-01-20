@@ -138,6 +138,7 @@ using Value = std::variant<
     uint16_t,
     int32_t,
     Account::Status,
+    Account::Sex,
     bool>;
 // *INDENT-ON*
 

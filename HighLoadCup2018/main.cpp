@@ -1,4 +1,4 @@
-﻿#include "DBLoader.h"
+﻿#include "AccountParser.h"
 #include "DB.h"
 #include "UrlDecoding.h"
 
@@ -11,6 +11,7 @@
 #include "RequestHandler/GroupAccounts.h"
 #include "RequestHandler/RecommendForAccount.h"
 #include "RequestHandler/SuggestForAccount.h"
+#include "RequestHandler/AddAccount.h"
 
 #include "PerformanceTimer.h"
 
@@ -30,7 +31,10 @@ using namespace std::literals;
 int main(int argc, char *argv[])
 {
     DB db;
-    DBLoader db_loader(db);
+    AccountParser parser(db, [&db](Account &&account)
+    {
+        db.add_account(std::move(account));
+    });
 
     PerformanceTimer timer;
 
@@ -46,7 +50,7 @@ int main(int argc, char *argv[])
         std::FILE *fp = std::fopen(filename.c_str(), "r");
         char buffer[1024];
         rj::FileReadStream file_stream(fp, buffer, 1024);
-        reader.Parse(file_stream, db_loader);
+        reader.Parse(file_stream, parser);
         std::fclose(fp);
     }
 

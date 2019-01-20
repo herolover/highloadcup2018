@@ -11,7 +11,7 @@
 template<>
 struct RequestHandler<GroupAccounts>
 {
-    using GroupKey = std::variant<bool, Account::Status, std::string_view>;
+    using GroupKey = std::variant<Account::Sex, Account::Status, std::string_view>;
 
     struct JSONResult
     {
@@ -31,7 +31,7 @@ struct RequestHandler<GroupAccounts>
             std::visit([this, &key_name, &group](auto &&value)
             {
                 using key_value_type = std::decay_t<decltype(value)>;
-                if constexpr(std::is_same_v<bool, key_value_type>)
+                if constexpr(std::is_same_v<Account::Sex, key_value_type>)
                 {
                     group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_sex(value)), document.GetAllocator());
                 }
@@ -39,7 +39,7 @@ struct RequestHandler<GroupAccounts>
                 {
                     group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_account_status(value)), document.GetAllocator());
                 }
-                else
+                else if constexpr(std::is_same_v<std::string_view, key_value_type>)
                 {
                     group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
                 }
@@ -130,7 +130,7 @@ struct RequestHandler<GroupAccounts>
                         using field_type = std::decay_t<decltype(field)>;
                         if constexpr(std::is_same_v<f_sex, field_type>)
                         {
-                            count_key(account.is_male);
+                            count_key(account.sex);
                         }
                         else if constexpr(std::is_same_v<f_status, field_type>)
                         {

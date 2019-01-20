@@ -137,7 +137,7 @@ struct RequestHandler<RecommendForAccount>
         std::vector<std::pair<IterType, IterType>> range_list;
         for (auto &interest : account.interest_list)
         {
-            range_list.push_back(db.interest_recommendations[interest].equal_range(!account.is_male));
+            range_list.push_back(db.interest_recommendations[interest].equal_range(account.sex == Account::Sex::MALE ? Account::Sex::FEMALE : Account::Sex::MALE));
         }
 
         auto less = [](auto &&a, auto &&b)

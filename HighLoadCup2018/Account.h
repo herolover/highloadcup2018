@@ -49,35 +49,44 @@ struct Account
     using city_t = shared_string<3>;
     using interest_mask_t = std::bitset<128>;
 
+    enum class Sex: uint8_t
+    {
+        INVALID = 0,
+        MALE = 1,
+        FEMALE = 2
+    };
+
     enum class Status : uint8_t
     {
-        FREE = 0,
-        COMPLICATED = 1,
-        BUSY = 2,
+        INVALID = 0,
+        FREE = 1,
+        COMPLICATED = 2,
+        BUSY = 3,
     };
 
     enum class PremiumStatus : uint8_t
     {
-        ACTIVE = 0,
-        NO = 1,
-        EXPIRED = 2,
+        INVALID = 0,
+        ACTIVE = 1,
+        NO = 2,
+        EXPIRED = 3,
     };
 
-    uint32_t id;
+    uint32_t id = 0;
     std::string email;
     std::string email_domain;
     first_name_t first_name;
     second_name_t second_name;
     std::string phone;
     std::string phone_code;
-    bool is_male;
-    int32_t birth;
-    uint16_t birth_year;
+    Sex sex = Sex::INVALID;
+    int32_t birth = 0;
+    uint16_t birth_year = 0;
     country_t country;
     city_t city;
-    int32_t joined;
-    uint16_t joined_year;
-    Status status;
+    int32_t joined = 0;
+    uint16_t joined_year = 0;
+    Status status = Status::INVALID;
     std::vector<std::string_view> interest_list;
     interest_mask_t interest_mask;
     int32_t premium_start = 0;

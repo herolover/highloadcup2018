@@ -13,14 +13,14 @@ inline uint16_t get_year(std::time_t timestamp)
     return time->tm_year + 1900;
 }
 
-inline bool convert_sex(const std::string_view &value)
+inline Account::Sex convert_sex(const std::string_view &value)
 {
-    return value[0] == 'm';
+    return value[0] == 'm' ? Account::Sex::MALE : (value[0] == 'f' ? Account::Sex::FEMALE : Account::Sex::INVALID);
 }
 
-inline const char *convert_sex(bool is_male)
+inline const char *convert_sex(Account::Sex sex)
 {
-    return is_male ? "m" : "f";
+    return sex == Account::Sex::MALE ? "m" : "f";
 }
 
 inline Account::Status convert_account_status(const std::string_view &value)

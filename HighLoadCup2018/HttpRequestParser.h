@@ -68,6 +68,8 @@ struct SuggestForAccount
 
 struct AddAccount
 {
+    const char *body;
+    std::size_t size;
 };
 
 struct UpdateAccount
@@ -328,6 +330,17 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                     std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
                 }
             }
+        }
+        else if (target_parts[1] == "new"sv)
+        {
+            AddAccount add_account{request.body().data(), request.body().size()};
+            result = std::move(add_account);
+        }
+        else if (target_parts[1] == "likes"sv)
+        {
+        }
+        else if (target_parts.size() == 3)
+        {
         }
     }
 
