@@ -14,8 +14,6 @@
 #include "RequestHandler/AddAccount.h"
 #include "RequestHandler/UpdateAccount.h"
 
-#include "PerformanceTimer.h"
-
 #include <string>
 #include <cstdio>
 #include <map>
@@ -37,8 +35,6 @@ int main(int argc, char *argv[])
         db.add_account(std::move(account));
     });
 
-    PerformanceTimer timer;
-
     std::string data(argv[1]);
     std::size_t limit = 0;
     std::from_chars(argv[2], argv[2] + std::strlen(argv[2]), limit);
@@ -57,7 +53,7 @@ int main(int argc, char *argv[])
 
     db.compute_interest_mask();
 
-    std::cout << "Loaded: " << db.account.size() << " " << timer.reset() * 1000 << std::endl;
+    std::cout << "Loaded: " << db.account.size() << std::endl;
 
     boost::asio::io_context io_context;
     HttpServer http_server(io_context, 80);
