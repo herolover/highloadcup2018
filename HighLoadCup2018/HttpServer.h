@@ -30,16 +30,14 @@ public:
                     boost::asio::ip::tcp::socket socket(_io_context);
                     _acceptor.async_accept(socket, yield);
 
-                    auto executor = socket.get_executor();
-                    boost::asio::spawn(executor, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
+                    boost::asio::spawn(_io_context, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
                     {
                         boost::system::error_code ec;
 
-                        std::string buffer_container;
+                        boost::beast::flat_buffer buffer;
                         while (true)
                         {
                             HttpRequest request;
-                            auto buffer = boost::asio::dynamic_buffer(buffer_container);
                             boost::beast::http::async_read(socket, buffer, request, yield[ec]);
 
                             if (ec)
@@ -47,14 +45,26 @@ public:
                                 break;
                             }
 
+                            auto need_eof = request.need_eof();
+
                             HttpResponse response;
-                            response.set(boost::beast::http::field::connection, "keep-alive");
-                            response.set(boost::beast::http::field::content_type, "text/plain");
+                            if (!need_eof)
+                            {
+                                response.set(boost::beast::http::field::connection, "keep-alive");
+                            }
+                            response.set(boost::beast::http::field::content_type, "application/json");
                             handler(request, response);
                             boost::beast::http::async_write(socket, response, yield[ec]);
 
                             if (ec)
                             {
+                                socket.close(ec);
+                                break;
+                            }
+                            else if (need_eof)
+                            {
+                                socket.shutdown(boost::asio::socket_base::shutdown_both, ec);
+                                socket.close(ec);
                                 break;
                             }
                         }
