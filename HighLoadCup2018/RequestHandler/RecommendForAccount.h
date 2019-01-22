@@ -82,10 +82,10 @@ struct RequestHandler<RecommendForAccount>
             auto &filter = request.search.filter;
             if (filter.field.index() != 0)
             {
-                bool check_result = for_field_method(filter.field, filter.method, [&with_account, &filter](auto &&field, auto &&method)
+                bool check_result = std::visit([&with_account, &filter](auto &&field, auto &&method)
                 {
                     return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(with_account, filter.value);
-                });
+                }, filter.field, filter.method);
                 if (!check_result)
                 {
                     continue;

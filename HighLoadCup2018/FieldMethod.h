@@ -255,15 +255,3 @@ inline Method make_method(const std::string_view &method_name)
 
     return method;
 }
-
-template<class Handler>
-auto for_field_method(const Field &field, const Method &method, Handler &&handler)
-{
-    return std::visit([&method, handler = std::forward<Handler>(handler)](auto &&f) mutable
-    {
-        return std::visit([&f, handler = std::forward<Handler>(handler)](auto &&m) mutable
-        {
-            return handler(f, m);
-        }, method);
-    }, field);
-}

@@ -36,7 +36,7 @@ struct RequestHandler<FilterAccounts>
 
             for (auto &filter : request.filter)
             {
-                for_field_method(filter.field, filter.method, [this, &account, &json_account, &filter](auto &&field, auto &&method)
+                std::visit([this, &account, &json_account, &filter](auto &&field, auto &&method)
                 {
                     using field_type = std::decay_t<decltype(field)>;
                     using method_type = std::decay_t<decltype(method)>;
@@ -50,7 +50,7 @@ struct RequestHandler<FilterAccounts>
                             json_account.AddMember(rapidjson::StringRef(field.name.data()), t_get_json_value<field_type>()(account, document.GetAllocator()), document.GetAllocator());
                         }
                     }
-                });
+                }, filter.field, filter.method);
             }
 
             account_array.PushBack(std::move(json_account), document.GetAllocator());
@@ -79,10 +79,10 @@ struct RequestHandler<FilterAccounts>
             bool is_suitable = true;
             for (auto &filter : request.filter)
             {
-                bool check_result = for_field_method(filter.field, filter.method, [&account, &filter](auto &&field, auto &&method)
+                bool check_result = std::visit([&account, &filter](auto &&field, auto &&method)
                 {
                     return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
-                });
+                }, filter.field, filter.method);
 
                 if (!check_result)
                 {
@@ -157,7 +157,7 @@ struct RequestHandler<FilterAccounts>
 
         auto select_by_filter_it = std::min_element(request.filter.begin(), request.filter.end(), [](auto &&a, auto &&b)
         {
-            auto a_field_value = for_field_method(a.field, a.method, [](auto &&field, auto &&method)
+            auto a_field_value = std::visit([](auto &&field, auto &&method)
             {
                 using method_type = std::decay_t<decltype(method)>;
                 if constexpr(boost::mp11::mp_contains<method_ignore_list, method_type>::value)
@@ -166,9 +166,9 @@ struct RequestHandler<FilterAccounts>
                 }
 
                 return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
-            });
+            }, a.field, a.method);
 
-            auto b_field_value = for_field_method(b.field, b.method, [](auto &&field, auto &&method)
+            auto b_field_value = std::visit([](auto &&field, auto &&method)
             {
                 using method_type = std::decay_t<decltype(method)>;
                 if constexpr(boost::mp11::mp_contains<method_ignore_list, method_type>::value)
@@ -177,7 +177,7 @@ struct RequestHandler<FilterAccounts>
                 }
 
                 return boost::mp11::mp_find<field_priority_list, std::decay_t<decltype(field)>>::value;
-            });
+            }, b.field, b.method);
 
             return a_field_value < b_field_value;
         });
@@ -193,13 +193,13 @@ struct RequestHandler<FilterAccounts>
 
         if (is_selectable)
         {
-            for_field_method(select_by_filter_it->field, select_by_filter_it->method, [&db, &request, &response, &select_by_filter_it](auto &&field, auto &&method)
+            std::visit([&db, &request, &response, &select_by_filter_it](auto &&field, auto &&method)
             {
                 t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, select_by_filter_it->value, [&db, &request, &response](auto &&range)
                 {
                     filter(request, response, range.first, range.second);
                 });
-            });
+            }, select_by_filter_it->field, select_by_filter_it->method);
         }
         else
         {

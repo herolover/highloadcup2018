@@ -110,10 +110,10 @@ struct RequestHandler<GroupAccounts>
             bool is_suitable = true;
             for (auto &filter : request.filter)
             {
-                bool check_result = for_field_method(filter.field, filter.method, [&account, &filter](auto &&field, auto &&method)
+                bool check_result = std::visit([&account, &filter](auto &&field, auto &&method)
                 {
                     return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
-                });
+                }, filter.field, filter.method);
 
                 if (!check_result)
                 {
@@ -207,13 +207,13 @@ struct RequestHandler<GroupAccounts>
         else if (request.filter.size() == 1 && std::holds_alternative<f_likes>(request.filter.front().field))
         {
             auto &likes_filter = request.filter.front();
-            for_field_method(likes_filter.field, likes_filter.method, [&db, &request, &response, &likes_filter](auto &&field, auto &&method)
+            std::visit([&db, &request, &response, &likes_filter](auto &&field, auto &&method)
             {
                 t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, likes_filter.value, [&db, &request, &response](auto &&range)
                 {
                     filter(request, response, range.first, range.second);
                 });
-            });
+            }, likes_filter.field, likes_filter.method);
         }
         else
         {

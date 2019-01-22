@@ -129,7 +129,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                         auto method = make_method(field_method[1]);
                         if (field.index() != 0 && method.index() != 0)
                         {
-                            auto value = for_field_method(field, method, [&db, &key_value, &is_valid](auto &&field, auto &&method)
+                            auto value = std::visit([&db, &key_value, &is_valid](auto &&field, auto &&method)
                             {
                                 using field_type = std::decay_t<decltype(field)>;
                                 using method_type = std::decay_t<decltype(method)>;
@@ -137,7 +137,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                                 is_valid = t_has_method<field_type, method_type>::value;
 
                                 return t_value<field_type, method_type>()(db, key_value[1]);
-                            });
+                            }, field, method);
 
                             if (!is_valid)
                             {

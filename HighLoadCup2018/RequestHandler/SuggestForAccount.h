@@ -94,10 +94,10 @@ struct RequestHandler<SuggestForAccount>
                 auto &filter = request.search.filter;
                 if (filter.field.index() != 0)
                 {
-                    is_suitable = for_field_method(filter.field, filter.method, [&with_account, &filter](auto &&field, auto &&method)
+                    is_suitable = std::visit([&with_account, &filter](auto &&field, auto &&method)
                     {
                         return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(with_account.account(), filter.value);
-                    });
+                    }, filter.field, filter.method);
                 }
                 if (!is_suitable)
                 {
