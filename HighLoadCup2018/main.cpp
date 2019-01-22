@@ -29,22 +29,28 @@ using namespace std::literals;
 
 int main(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        return -1;
+    }
+
     DB db;
     AccountParser parser(db, [&db](Account &&account)
     {
         db.add_account(std::move(account));
     });
 
-    std::string data(argv[1]);
-    std::size_t limit = 0;
-    std::from_chars(argv[2], argv[2] + std::strlen(argv[2]), limit);
-
-    for (std::size_t i = 1; i <= limit; ++i)
+    std::string data_path(argv[1]);
+    for (std::size_t i = 1; i <= 130; ++i)
     {
-        std::string filename = "../data/" + data + "/data/accounts_" + std::to_string(i) + ".json";
+        std::string filename = data_path + "/accounts_" + std::to_string(i) + ".json";
 
         rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
         std::FILE *fp = std::fopen(filename.c_str(), "r");
+        if (fp == nullptr)
+        {
+            break;
+        }
         char buffer[1024];
         rj::FileReadStream file_stream(fp, buffer, 1024);
         reader.Parse(file_stream, parser);
