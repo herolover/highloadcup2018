@@ -101,12 +101,12 @@ public:
         return _value.get();
     }
 
-    bool operator==(nullptr_t) const
+    bool operator==(std::nullptr_t) const
     {
         return _value == nullptr;
     }
 
-    bool operator!=(nullptr_t) const
+    bool operator!=(std::nullptr_t) const
     {
         return _value != nullptr;
     }
