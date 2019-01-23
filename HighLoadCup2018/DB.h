@@ -232,6 +232,12 @@ struct DB
         return std::string_view((*it)->data(), (*it)->size());
     }
 
+    bool has_account(uint32_t account_id)
+    {
+        std::lock_guard lock(m);
+        return account.find(account_id) != account.end();
+    }
+
     bool add_account(Account &&new_account)
     {
         std::lock_guard lock(m);

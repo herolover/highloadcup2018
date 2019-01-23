@@ -18,7 +18,7 @@ struct RequestHandler<UpdateAccount>
             account.id = request.account_id;
             account.interest_mask = db.get_interest_mask(account.interest_list);
             is_valid = db.update_account(std::move(account));
-        }, AccountParserState::ACCOUNT_KEY);
+        }, AccountParserState::ACCOUNT_KEY, true);
         thread_local rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
 
         parser.reset(AccountParserState::ACCOUNT_KEY);

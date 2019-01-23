@@ -347,8 +347,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             UpdateAccount update_account;
             auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), update_account.account_id);
 
-            auto &index = db.account.get<DB::id_tag>();
-            if (ec == std::errc() && update_account.account_id > 0 && index.find(update_account.account_id) != index.end())
+            if (ec == std::errc() && db.has_account(update_account.account_id))
             {
                 update_account.body = request.body().data();
                 update_account.size = request.body().size();
