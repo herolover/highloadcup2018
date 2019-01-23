@@ -388,7 +388,7 @@ struct DB
         {
             return *a < b;
         });
-        if (**interest_it == interest)
+        if (interest_it != interest_list.end() && **interest_it == interest)
         {
             mask[std::distance(interest_list.begin(), interest_it)] = true;
         }
