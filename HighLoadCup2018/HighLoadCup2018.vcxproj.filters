@@ -137,5 +137,8 @@
     <ClInclude Include="RequestHandler\UpdateAccount.h">
       <Filter>Header Files\RequestHandler</Filter>
     </ClInclude>
+    <ClInclude Include="RequestHandler\AddLikes.h">
+      <Filter>Header Files\RequestHandler</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

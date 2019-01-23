@@ -13,6 +13,7 @@
 #include "RequestHandler/SuggestForAccount.h"
 #include "RequestHandler/AddAccount.h"
 #include "RequestHandler/UpdateAccount.h"
+#include "RequestHandler/AddLikes.h"
 
 #include <string>
 #include <cstdio>

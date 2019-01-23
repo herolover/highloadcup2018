@@ -238,6 +238,25 @@ struct DB
         return account.find(account_id) != account.end();
     }
 
+    void add_like_list(const std::vector<std::tuple<uint32_t, uint32_t, int32_t>> &like_list)
+    {
+        std::lock_guard lock(m);
+        for (auto &like : like_list)
+        {
+            std::apply([this](uint32_t likee_id, uint32_t liker_id, int32_t like_ts)
+            {
+                auto it = account.find(liker_id);
+                account.modify(it, [likee_id, like_ts](Account &a)
+                {
+                    a.add_like(likee_id, like_ts);
+                });
+                AccountReference account_reference(it);
+                auto &account_list = liked_by[likee_id];
+                account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
+            }, like);
+        }
+    }
+
     bool add_account(Account &&new_account)
     {
         std::lock_guard lock(m);

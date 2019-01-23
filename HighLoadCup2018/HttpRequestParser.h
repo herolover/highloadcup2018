@@ -81,6 +81,8 @@ struct UpdateAccount
 
 struct AddLikes
 {
+    const char *body;
+    std::size_t size;
 };
 
 struct BadRequest
@@ -341,6 +343,8 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
         }
         else if (target_parts[1] == "likes"sv)
         {
+            AddLikes add_likes{request.body().data(), request.body().size()};
+            result = std::move(add_likes);
         }
         else if (target_parts.size() == 3)
         {

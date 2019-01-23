@@ -164,6 +164,7 @@
     <ClInclude Include="IntersectionIter.h" />
     <ClInclude Include="RequestHandler.h" />
     <ClInclude Include="RequestHandler\AddAccount.h" />
+    <ClInclude Include="RequestHandler\AddLikes.h" />
     <ClInclude Include="RequestHandler\BadRequest.h" />
     <ClInclude Include="RequestHandler\FilterAccounts.h" />
     <ClInclude Include="RequestHandler\GroupAccounts.h" />

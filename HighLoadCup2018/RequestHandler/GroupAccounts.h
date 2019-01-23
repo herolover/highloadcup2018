@@ -201,6 +201,8 @@ struct RequestHandler<GroupAccounts>
 
     static void handle(DB &db, GroupAccounts &request, HttpServer::HttpResponse &response)
     {
+        response.result(boost::beast::http::status::not_implemented);
+        response.prepare_payload();
         if (request.filter.empty())
         {
         }
