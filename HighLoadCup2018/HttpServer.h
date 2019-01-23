@@ -30,7 +30,7 @@ public:
                     boost::asio::ip::tcp::socket socket(_io_context);
                     _acceptor.async_accept(socket, yield);
 
-                    boost::asio::spawn(_io_context, [socket = std::move(socket), handler = std::forward<Handler>(handler)](boost::asio::yield_context yield) mutable
+                    boost::asio::spawn(_io_context, [socket = std::move(socket), handler](boost::asio::yield_context yield) mutable
                     {
                         boost::system::error_code ec;
 
@@ -42,13 +42,18 @@ public:
 
                             if (ec)
                             {
+                                std::cerr << "async_read: " << ec << std::endl;
                                 break;
                             }
 
                             auto need_eof = request.need_eof();
 
                             HttpResponse response;
-                            if (!need_eof)
+                            if (need_eof)
+                            {
+                                response.set(boost::beast::http::field::connection, "close");
+                            }
+                            else
                             {
                                 response.set(boost::beast::http::field::connection, "keep-alive");
                             }
@@ -58,6 +63,7 @@ public:
 
                             if (ec)
                             {
+                                std::cerr << "async_write: " << ec << std::endl;
                                 socket.close(ec);
                                 break;
                             }
