@@ -1,10 +1,10 @@
-FROM centos:7
+FROM centos:latest
 
 WORKDIR /root
 
 ADD highloadcup2018 .
 
-RUN pacman -S --noconfirm unzip
+RUN yum install -y unzip
 RUN mkdir data
 
 EXPOSE 80
