@@ -123,7 +123,7 @@ struct RequestHandler<FilterAccounts>
 
         if (first_name_it != request.filter.end() && sex_it != request.filter.end())
         {
-            bool &is_male = std::get<bool>(sex_it->value);
+            bool is_male = std::get<Account::Sex>(sex_it->value) == Account::Sex::MALE;
             auto &name_list = is_male ? db.female_first_name : db.male_first_name;
             std::visit([&name_list](auto &&value)
             {

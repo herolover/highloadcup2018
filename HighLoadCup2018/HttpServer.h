@@ -42,7 +42,10 @@ public:
 
                             if (ec)
                             {
-                                std::cerr << "async_read: " << ec << std::endl;
+                                if (ec != boost::beast::http::error::end_of_stream)
+                                {
+                                    std::cerr << "async_read: " << ec << std::endl;
+                                }
                                 break;
                             }
 
