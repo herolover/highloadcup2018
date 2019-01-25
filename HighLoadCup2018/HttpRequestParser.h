@@ -359,7 +359,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             }
             else
             {
-                std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
+                std::get<BadRequest>(result).status = boost::beast::http::status::not_found;
             }
         }
     }
