@@ -96,15 +96,19 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
 {
     ParsedRequest result = BadRequest();
 
-    auto target_parts = split(std::string_view(decoded_target.data() + 1, decoded_target.size() - 1), '/');
+    auto pos = decoded_target.find('?');
+    auto target = std::string_view(decoded_target.data() + 1, pos - 2);
+    auto params = std::string_view(decoded_target.data() + pos + 1, decoded_target.size() - pos - 1);
+
+    auto target_parts = split(target, '/');
     if (target_parts[0] == "accounts"sv)
     {
-        if (target_parts[1] == "filter"sv && target_parts.size() == 3)
+        if (target_parts[1] == "filter"sv && target_parts.size() == 2)
         {
             bool is_valid = true;
             bool has_limit = false;
             FilterAccounts filter_accounts;
-            for (auto &param : split(std::string_view(target_parts[2].data() + 1, target_parts[2].size() - 1), '&'))
+            for (auto &param : split(params, '&'))
             {
                 auto key_value = split(param, '=');
                 if (key_value.size() != 2 || key_value[1] == ""sv)
@@ -176,14 +180,14 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                 std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
             }
         }
-        else if (target_parts[1] == "group"sv && target_parts.size() == 3)
+        else if (target_parts[1] == "group"sv && target_parts.size() == 2)
         {
             bool is_valid = true;
             bool has_keys = false;
             bool has_order = false;
             bool has_limit = false;
             GroupAccounts group_accounts;
-            for (auto &param : split(std::string_view(target_parts[2].data() + 1, target_parts[2].size() - 1), '&'))
+            for (auto &param : split(params, '&'))
             {
                 auto key_value = split(param, '=');
                 if (key_value.size() != 2 || key_value[1] == ""sv)
@@ -287,7 +291,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                 std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
             }
         }
-        else if ((target_parts[2] == "recommend"sv || target_parts[2] == "suggest"sv) && target_parts.size() == 4)
+        else if ((target_parts[2] == "recommend"sv || target_parts[2] == "suggest"sv) && target_parts.size() == 3)
         {
             SearchForAccount search;
             auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), search.account_id);
@@ -297,7 +301,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             {
                 bool is_valid = true;
                 bool has_limit = false;
-                for (auto &param : split(std::string_view(target_parts[3].data() + 1, target_parts[3].size() - 1), '&'))
+                for (auto &param : split(params, '&'))
                 {
                     auto key_value = split(param, '=');
                     if (key_value.size() != 2 || key_value[1] == ""sv)
@@ -363,7 +367,7 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             AddLikes add_likes{request.body().data(), request.body().size()};
             result = std::move(add_likes);
         }
-        else if (target_parts.size() == 3)
+        else if (target_parts.size() == 2)
         {
             UpdateAccount update_account;
             auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), update_account.account_id);
