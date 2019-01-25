@@ -107,6 +107,11 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             for (auto &param : split(std::string_view(target_parts[2].data() + 1, target_parts[2].size() - 1), '&'))
             {
                 auto key_value = split(param, '=');
+                if (key_value.size() != 2 || key_value[1] == ""sv)
+                {
+                    is_valid = false;
+                    break;
+                }
 
                 if (key_value[0] == "limit"sv)
                 {
@@ -181,9 +186,16 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             for (auto &param : split(std::string_view(target_parts[2].data() + 1, target_parts[2].size() - 1), '&'))
             {
                 auto key_value = split(param, '=');
+                if (key_value.size() != 2 || key_value[1] == ""sv)
+                {
+                    is_valid = false;
+                    break;
+                }
+
                 if (key_value[0] == "keys"sv)
                 {
                     has_keys = true;
+
                     for (auto &key : split(key_value[1]))
                     {
                         auto field = make_field(key);
@@ -288,6 +300,11 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                 for (auto &param : split(std::string_view(target_parts[3].data() + 1, target_parts[3].size() - 1), '&'))
                 {
                     auto key_value = split(param, '=');
+                    if (key_value.size() != 2 || key_value[1] == ""sv)
+                    {
+                        is_valid = false;
+                        break;
+                    }
                     if (key_value[0] == "limit"sv)
                     {
                         auto[p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), search.limit);
