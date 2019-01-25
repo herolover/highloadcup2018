@@ -151,9 +151,9 @@ struct DB
             return _it->status;
         }
 
-        Account::PremiumStatus premium_status() const
+        bool is_not_premium_now() const
         {
-            return _it->premium_status;
+            return _it->premium_status != Account::PremiumStatus::ACTIVE;
         }
 
         const Account &account() const
@@ -203,7 +203,7 @@ struct DB
                 mi::tag<recommend_tag>,
                 mi::composite_key<AccountReference,
                     mi::const_mem_fun<AccountReference, Account::Sex, &AccountReference::sex>,
-                    mi::const_mem_fun<AccountReference, Account::PremiumStatus, &AccountReference::premium_status>,
+                    mi::const_mem_fun<AccountReference, bool, &AccountReference::is_not_premium_now>,
                     mi::const_mem_fun<AccountReference, Account::Status, &AccountReference::status>
                 >
             >

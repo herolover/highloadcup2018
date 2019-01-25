@@ -68,7 +68,8 @@ struct RequestHandler<RecommendForAccount>
 
         auto is_premium_status_or_status_changed = [&account_list](auto &&current_account)
         {
-            return std::tie(account_list.back()->premium_status, account_list.back()->status) != std::tie(current_account.premium_status, current_account.status);
+            return std::make_tuple(account_list.back()->premium_status == Account::PremiumStatus::ACTIVE, account_list.back()->status)
+                   != std::make_tuple(current_account.premium_status == Account::PremiumStatus::ACTIVE, current_account.status);
         };
         for (; begin != end && !(account_list.size() >= request.search.limit && is_premium_status_or_status_changed(begin->account())); ++begin)
         {
@@ -110,8 +111,8 @@ struct RequestHandler<RecommendForAccount>
             auto a_age_difference = std::abs(a->birth - account.birth);
             auto b_age_difference = std::abs(b->birth - account.birth);
 
-            return std::tie(a->premium_status, a->status, b_common_interests, a_age_difference, a->id) <
-                   std::tie(b->premium_status, b->status, a_common_interests, b_age_difference, b->id);
+            return std::make_tuple(a->premium_status != Account::PremiumStatus::ACTIVE, a->status, b_common_interests, a_age_difference, a->id) <
+                   std::make_tuple(b->premium_status != Account::PremiumStatus::ACTIVE, b->status, a_common_interests, b_age_difference, b->id);
         });
 
         for (auto &a : account_list)
@@ -142,7 +143,8 @@ struct RequestHandler<RecommendForAccount>
 
         auto less = [](auto &&a, auto &&b)
         {
-            return std::tie(a.account().premium_status, a.account().status, a.account().id) < std::tie(b.account().premium_status, b.account().status, b.account().id);
+            return std::make_tuple(a.account().premium_status != Account::PremiumStatus::ACTIVE, a.account().status, a.account().id)
+                   < std::make_tuple(b.account().premium_status != Account::PremiumStatus::ACTIVE, b.account().status, b.account().id);
         };
 
         filter(request, response, account, union_iter<false, IterType, decltype(less)>(range_list, false, less), union_iter<false, IterType, decltype(less)>(range_list, true, less));
