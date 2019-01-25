@@ -72,9 +72,14 @@ struct RequestHandler<FilterAccounts>
     {
         JSONResult result(request);
         std::size_t counter = 0;
+        uint32_t last_added_account_id = 0;
         for (; begin != end && counter < request.limit; ++begin)
         {
             auto &account = begin->account();
+            if (account.id == last_added_account_id)
+            {
+                continue;
+            }
 
             bool is_suitable = true;
             for (auto &filter : request.filter)
@@ -92,8 +97,9 @@ struct RequestHandler<FilterAccounts>
             }
             if (is_suitable)
             {
-                ++counter;
                 result.add_account(account);
+                last_added_account_id = account.id;
+                ++counter;
             }
         }
 
