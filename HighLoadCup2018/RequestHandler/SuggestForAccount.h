@@ -105,7 +105,7 @@ struct RequestHandler<SuggestForAccount>
                 }
 
                 int32_t ts_counter = 0;
-                int32_t sum_ts = 0;
+                int64_t sum_ts = 0;
                 auto &like_list = with_account.account().like_list;
                 auto like_it = std::lower_bound(like_list.begin(), like_list.end(), like.id, Like::is_less());
                 for (; like_it != like_list.end() && like_it->id == like.id; ++like_it)
@@ -114,7 +114,7 @@ struct RequestHandler<SuggestForAccount>
                     ++ts_counter;
                 }
 
-                similarity_list.emplace_back(with_account, std::abs(like.ts - sum_ts / ts_counter));
+                similarity_list.emplace_back(with_account, std::abs(like.ts - static_cast<int32_t>(sum_ts / ts_counter)));
             }
         }
 
