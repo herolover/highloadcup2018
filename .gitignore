@@ -7,3 +7,4 @@ accounts_*.json
 *.vcxproj.user
 data/
 yandex_tank/
+*.txt
