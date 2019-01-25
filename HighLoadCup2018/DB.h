@@ -218,6 +218,8 @@ struct DB
     std::map<std::string_view, InterestIndex> interest_account_list;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
 
+    int32_t current_time = 0;
+
     std::string_view add_interest(std::string_view interest)
     {
         auto it = std::lower_bound(interest_list.begin(), interest_list.end(), interest, [](auto &&a, auto &&b)

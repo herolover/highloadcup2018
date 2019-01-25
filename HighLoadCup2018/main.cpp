@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <string_view>
 #include <thread>
+#include <fstream>
 
 #include <rapidjson/filereadstream.h>
 
@@ -42,6 +43,11 @@ int main(int argc, char *argv[])
     });
 
     std::string data_path(argv[1]);
+    {
+        std::ifstream options_file(data_path + "/options.txt");
+        options_file >> db.current_time;
+    }
+
     for (std::size_t i = 1; i <= 130; ++i)
     {
         std::string filename = data_path + "/accounts_" + std::to_string(i) + ".json";

@@ -49,7 +49,6 @@ public:
         , _state(state)
         , _check_likes(check_likes)
     {
-        _current_time = 1545834025;
     }
 
     void reset(AccountParserState state)
@@ -297,7 +296,7 @@ public:
         {
             if (_account.premium_start != 0 && _account.premium_finish != 0)
             {
-                _account.premium_status = _current_time > _account.premium_start && _current_time < _account.premium_finish ? Account::PremiumStatus::ACTIVE : Account::PremiumStatus::EXPIRED;
+                _account.premium_status = _db.current_time > _account.premium_start && _db.current_time < _account.premium_finish ? Account::PremiumStatus::ACTIVE : Account::PremiumStatus::EXPIRED;
             }
             else if (_account.premium_start == _account.premium_finish)
             {
@@ -347,6 +346,4 @@ private:
     Account _account;
     uint32_t _like_id = 0;
     int32_t _like_ts = 0;
-
-    std::time_t _current_time;
 };
