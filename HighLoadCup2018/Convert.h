@@ -25,18 +25,22 @@ inline const char *convert_sex(Account::Sex sex)
 
 inline Account::Status convert_account_status(const std::string_view &value)
 {
+    Account::Status result = Account::Status::INVALID;
+
     if (value == u8"свободны"sv)
     {
-        return Account::Status::FREE;
+        result = Account::Status::FREE;
     }
     else if (value == u8"заняты"sv)
     {
-        return Account::Status::BUSY;
+        result = Account::Status::BUSY;
     }
-    else
+    else if (value == u8"всё сложно"sv)
     {
-        return Account::Status::COMPLICATED;
+        result = Account::Status::COMPLICATED;
     }
+
+    return result;
 }
 
 inline const char *convert_account_status(Account::Status status)
