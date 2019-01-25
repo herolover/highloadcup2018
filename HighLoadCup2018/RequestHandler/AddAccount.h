@@ -12,8 +12,10 @@ struct RequestHandler<AddAccount>
 {
     static void handle(DB &db, AddAccount &request, HttpServer::HttpResponse &response)
     {
+        thread_local rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
+
         bool is_valid = false;
-        thread_local AccountParser parser(db, [&db, &is_valid](Account &&account)
+        AccountParser parser(db, [&db, &is_valid](Account &&account)
         {
             if (account.id != 0
                     && !account.email.empty()
@@ -25,7 +27,6 @@ struct RequestHandler<AddAccount>
                 is_valid = db.add_account(std::move(account));
             }
         }, AccountParserState::ACCOUNT_KEY, true);
-        thread_local rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
 
         parser.reset(AccountParserState::ACCOUNT_KEY);
         rapidjson::MemoryStream stream(request.body, request.size);
