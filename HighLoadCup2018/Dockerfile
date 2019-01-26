@@ -9,4 +9,4 @@ RUN mkdir data
 
 EXPOSE 80
 
-CMD unzip -qq /tmp/data/data.zip -d data && ./highloadcup2018 data
+CMD unzip -qq /tmp/data/data.zip -d data && cp /tmp/data/options.txt data/options.txt && ./highloadcup2018 data
