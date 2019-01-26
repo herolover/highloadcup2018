@@ -267,7 +267,8 @@ struct DB
                 mi::composite_key<AccountReference,
                     mi::const_mem_fun<AccountReference, Account::Sex, &AccountReference::sex>,
                     mi::const_mem_fun<AccountReference, bool, &AccountReference::is_not_premium_now>,
-                    mi::const_mem_fun<AccountReference, Account::Status, &AccountReference::status>
+                    mi::const_mem_fun<AccountReference, Account::Status, &AccountReference::status>,
+                    mi::const_mem_fun<AccountReference, uint32_t, &AccountReference::id>
                 >
             >
         >
@@ -418,9 +419,18 @@ struct DB
                     a.joined = update_account.joined;
                     a.joined_year = update_account.joined_year;
                 }
+                bool update_interests = false;
                 if (update_account.status != Account::Status::INVALID)
                 {
                     a.status = update_account.status;
+                    update_interests = true;
+                }
+                if (update_account.premium_status != Account::PremiumStatus::NO)
+                {
+                    a.premium_status = update_account.premium_status;
+                    a.premium_start = update_account.premium_start;
+                    a.premium_finish = update_account.premium_finish;
+                    update_interests = true;
                 }
                 if (!update_account.interest_list.empty())
                 {
@@ -436,15 +446,21 @@ struct DB
 
                     for (auto &account_interest : a.interest_list)
                     {
-                        auto &account_list = interest_account_list[account_interest];
-                        account_list.insert(account_reference);
+                        interest_account_list[account_interest].insert(account_reference);
                     }
                 }
-                if (update_account.premium_status != Account::PremiumStatus::NO)
+                else if (update_interests)
                 {
-                    a.premium_status = update_account.premium_status;
-                    a.premium_start = update_account.premium_start;
-                    a.premium_finish = update_account.premium_finish;
+                    AccountReference account_reference(it);
+                    for (auto &account_interest : a.interest_list)
+                    {
+                        interest_account_list[account_interest].erase(account_reference.id());
+                    }
+
+                    for (auto &account_interest : a.interest_list)
+                    {
+                        interest_account_list[account_interest].insert(account_reference);
+                    }
                 }
                 if (!update_account.like_list.empty())
                 {
