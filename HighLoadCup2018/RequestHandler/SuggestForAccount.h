@@ -61,9 +61,9 @@ struct RequestHandler<SuggestForAccount>
     struct Similarity
     {
         DB::AccountReference with_account;
-        int32_t value;
+        double value;
 
-        Similarity(DB::AccountReference with_account, int32_t value)
+        Similarity(DB::AccountReference with_account, double value)
             : with_account(with_account)
             , value(value)
         {
@@ -71,9 +71,40 @@ struct RequestHandler<SuggestForAccount>
 
         bool operator<(const Similarity &c) const
         {
-            return value < c.value;
+            return value > c.value;
         }
+
+        struct is_less
+        {
+            using is_transparent = void;
+
+            bool operator()(const Similarity &similarity, uint32_t id)
+            {
+                return similarity.with_account.id() < id;
+            }
+
+            bool operator()(uint32_t id, const Similarity &similarity)
+            {
+                return id < similarity.with_account.id();
+            }
+        };
     };
+
+    template<class It>
+    static int32_t compute_average_ts(It &begin, It end)
+    {
+        uint32_t id = begin->id;
+        int64_t sum_ts = 0;
+        uint8_t count = 0;
+        while (begin != end && begin->id == id)
+        {
+            sum_ts += begin->ts;
+            ++begin;
+            ++count;
+        }
+
+        return static_cast<int32_t>(sum_ts / count);
+    }
 
     static void handle(DB &db, SuggestForAccount &request, HttpServer::HttpResponse &response)
     {
@@ -81,9 +112,11 @@ struct RequestHandler<SuggestForAccount>
 
         auto &index = db.account.get<DB::id_tag>();
         auto &account = index.find(request.search.account_id)->account();
-        for (auto &like : account.like_list)
+        for (auto like_it = account.like_list.begin(); like_it != account.like_list.end();)
         {
-            for (auto &with_account : db.liked_by[like.id])
+            auto like_id = like_it->id;
+            auto average_ts = compute_average_ts(like_it, account.like_list.end());
+            for (auto &with_account : db.liked_by[like_id])
             {
                 if (with_account.account().id == account.id)
                 {
@@ -104,17 +137,25 @@ struct RequestHandler<SuggestForAccount>
                     continue;
                 }
 
-                int32_t ts_counter = 0;
-                int64_t sum_ts = 0;
                 auto &like_list = with_account.account().like_list;
-                auto like_it = std::lower_bound(like_list.begin(), like_list.end(), like.id, Like::is_less());
-                for (; like_it != like_list.end() && like_it->id == like.id; ++like_it)
-                {
-                    sum_ts += like_it->ts;
-                    ++ts_counter;
-                }
+                auto with_account_like_it = std::lower_bound(like_list.begin(), like_list.end(), like_id, Like::is_less());
+                auto with_account_average_ts = compute_average_ts(with_account_like_it, like_list.end());
 
-                similarity_list.emplace_back(with_account, std::abs(like.ts - static_cast<int32_t>(sum_ts / ts_counter)));
+                auto diff_ts = std::abs(average_ts - with_account_average_ts);
+                double similarity_value = 1.0;
+                if (diff_ts != 0)
+                {
+                    similarity_value /= diff_ts;
+                }
+                auto similarity_it = std::lower_bound(similarity_list.begin(), similarity_list.end(), with_account.id(), Similarity::is_less());
+                if (similarity_it != similarity_list.end() && similarity_it->with_account.id() == with_account.id())
+                {
+                    similarity_it->value += similarity_value;
+                }
+                else
+                {
+                    similarity_list.emplace(similarity_it, with_account, similarity_value);
+                }
             }
         }
 
