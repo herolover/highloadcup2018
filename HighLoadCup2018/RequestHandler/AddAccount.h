@@ -20,8 +20,7 @@ struct RequestHandler<AddAccount>
             if (account.id != 0
                     && !account.email.empty()
                     && account.sex != Account::Sex::INVALID
-                    && account.status != Account::Status::INVALID
-                    && account.premium_status != Account::PremiumStatus::INVALID)
+                    && account.status != Account::Status::INVALID)
             {
                 account.interest_mask = db.get_interest_mask(account.interest_list);
                 is_valid = db.add_account(std::move(account));

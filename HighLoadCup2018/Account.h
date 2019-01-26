@@ -66,7 +66,6 @@ struct Account
 
     enum class PremiumStatus : uint8_t
     {
-        INVALID = 0,
         ACTIVE = 1,
         NO = 2,
         EXPIRED = 3,

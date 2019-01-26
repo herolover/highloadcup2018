@@ -54,63 +54,126 @@ struct DB
             >,
             mi::ordered_unique<
                 mi::tag<email_tag>,
-                mi::member<Account, std::string, &Account::email>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, std::string, &Account::email>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<email_domain_tag>,
-                mi::member<Account, std::string, &Account::email_domain>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, std::string, &Account::email_domain>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<status_tag>,
-                mi::member<Account, Account::Status, &Account::status>
+                mi::composite_key<Account,
+                    mi::member<Account, Account::Status, &Account::status>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<first_name_tag>,
-                mi::member<Account, Account::first_name_t, &Account::first_name>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, Account::first_name_t, &Account::first_name>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<second_name_tag>,
-                mi::member<Account, Account::second_name_t, &Account::second_name>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, Account::second_name_t, &Account::second_name>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<phone_tag>,
-                mi::member<Account, std::string, &Account::phone>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, std::string, &Account::phone>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<phone_code_tag>,
-                mi::member<Account, std::string, &Account::phone_code>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, std::string, &Account::phone_code>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<sex_tag>,
-                mi::member<Account, Account::Sex, &Account::sex>
+                mi::composite_key<Account,
+                    mi::member<Account, Account::Sex, &Account::sex>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<birth_year_tag>,
-                mi::member<Account, uint16_t, &Account::birth_year>
+                mi::composite_key<Account,
+                    mi::member<Account, uint16_t, &Account::birth_year>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<country_tag>,
-                mi::member<Account, Account::country_t, &Account::country>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, Account::country_t, &Account::country>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<city_tag>,
-                mi::member<Account, Account::city_t, &Account::city>,
-                common_less
+                mi::composite_key<Account,
+                    mi::member<Account, Account::city_t, &Account::city>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >,
+                mi::composite_key_compare<
+                    common_less,
+                    std::less<uint32_t>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<joined_year_tag>,
-                mi::member<Account, uint16_t, &Account::joined_year>
+                mi::composite_key<Account,
+                    mi::member<Account, uint16_t, &Account::joined_year>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >
             >,
             mi::ordered_non_unique<
                 mi::tag<premium_tag>,
-                mi::member<Account, Account::PremiumStatus, &Account::premium_status>
+                mi::composite_key<Account,
+                    mi::member<Account, Account::PremiumStatus, &Account::premium_status>,
+                    mi::member<Account, uint32_t, &Account::id>
+                >
             >
         >
     > account;
@@ -377,7 +440,7 @@ struct DB
                         account_list.insert(account_reference);
                     }
                 }
-                if (update_account.premium_status != Account::PremiumStatus::INVALID)
+                if (update_account.premium_status != Account::PremiumStatus::NO)
                 {
                     a.premium_status = update_account.premium_status;
                     a.premium_start = update_account.premium_start;

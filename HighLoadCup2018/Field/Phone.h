@@ -34,7 +34,7 @@ struct t_select<f_phone, m_null>
     void operator()(DB &db, const Value &value, Handler &&handler) const
     {
         auto &index = db.account.get<DB::phone_code_tag>();
-        handler(make_reverse_range(std::get<bool>(value) ? index.equal_range("") : std::make_pair(index.upper_bound(""), index.end())));
+        handler(make_reverse_range(std::get<bool>(value) ? index.equal_range(""sv) : std::make_pair(index.upper_bound(""sv), index.end())));
     }
 };
 
