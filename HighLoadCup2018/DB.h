@@ -257,11 +257,7 @@ struct DB
     // *INDENT-OFF*
     using InterestIndex = mi::multi_index_container<AccountReference,
         mi::indexed_by<
-            // replace to random access
-            mi::ordered_unique<
-                mi::tag<id_tag>,
-                mi::const_mem_fun<AccountReference, uint32_t, &AccountReference::id>
-            >,
+            mi::random_access<>,
             mi::ordered_non_unique<
                 mi::tag<recommend_tag>,
                 mi::composite_key<AccountReference,
@@ -293,6 +289,8 @@ struct DB
         if (it == interest_list.end() || **it != interest)
         {
             it = interest_list.insert(it, std::make_unique<std::string>(interest.data(), interest.size()));
+
+            interest_account_list[std::string_view((*it)->data(), (*it)->size())].reserve(50'000);
         }
 
         return std::string_view((*it)->data(), (*it)->size());
@@ -348,7 +346,8 @@ struct DB
 
             for (auto &account_interest : account_reference.account().interest_list)
             {
-                interest_account_list[account_interest].insert(account_reference);
+                auto &account_list = interest_account_list[account_interest];
+                account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
             }
 
             for (auto &like : account_reference.account().like_list)
@@ -437,8 +436,8 @@ struct DB
                     AccountReference account_reference(it);
                     for (auto &account_interest : a.interest_list)
                     {
-                        auto &account_list = interest_account_list[account_interest].get<id_tag>();
-                        account_list.erase(account_list.find(account_reference.id()));
+                        auto &account_list = interest_account_list[account_interest];
+                        account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
                     }
 
                     a.interest_list = std::move(update_account.interest_list);
@@ -446,7 +445,8 @@ struct DB
 
                     for (auto &account_interest : a.interest_list)
                     {
-                        interest_account_list[account_interest].insert(account_reference);
+                        auto &account_list = interest_account_list[account_interest];
+                        account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
                     }
                 }
                 else if (update_interests)
@@ -454,12 +454,14 @@ struct DB
                     AccountReference account_reference(it);
                     for (auto &account_interest : a.interest_list)
                     {
-                        interest_account_list[account_interest].erase(account_reference.id());
+                        auto &account_list = interest_account_list[account_interest];
+                        account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
                     }
 
                     for (auto &account_interest : a.interest_list)
                     {
-                        interest_account_list[account_interest].insert(account_reference);
+                        auto &account_list = interest_account_list[account_interest];
+                        account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
                     }
                 }
                 if (!update_account.like_list.empty())
