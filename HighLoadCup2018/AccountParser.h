@@ -257,7 +257,7 @@ public:
             break;
         case AccountParserState::LIKE_ID:
             _like_id = value;
-            if (_check_likes && !_db.has_account(_like_id))
+            if (_check_likes && !_db.has_account(_like_id).first)
             {
                 return false;
             }

@@ -15,12 +15,11 @@ struct RequestHandler<UpdateAccount>
         thread_local rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
 
         bool is_valid = false;
-        auto account_id = request.account_id;
-        AccountParser parser(db, [&db, &is_valid, account_id](Account &&account)
+        AccountParser parser(db, [&db, &is_valid, &request](Account &&account)
         {
-            account.id = account_id;
+            account.id = request.account_it->id;
             account.interest_mask = db.get_interest_mask(account.interest_list);
-            is_valid = db.update_account(std::move(account));
+            is_valid = db.update_account(request.account_it, std::move(account));
         }, AccountParserState::ACCOUNT_KEY, true);
 
         parser.reset(AccountParserState::ACCOUNT_KEY);

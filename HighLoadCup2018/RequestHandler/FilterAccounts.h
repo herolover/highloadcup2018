@@ -209,8 +209,7 @@ struct RequestHandler<FilterAccounts>
         }
         else
         {
-            auto &index = db.account.get<DB::id_tag>();
-            filter(request, response, index.rbegin(), index.rend());
+            filter(request, response, db.account.rbegin(), db.account.rend());
         }
     }
 };

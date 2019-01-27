@@ -86,7 +86,7 @@ public:
         {
         case LikeParserState::LIKEE_ID:
             _likee_id = value;
-            if (!_db.has_account(_likee_id))
+            if (!_db.has_account(_likee_id).first)
             {
                 return false;
             }
@@ -94,7 +94,7 @@ public:
             break;
         case LikeParserState::LIKER_ID:
             _liker_id = value;
-            if (!_db.has_account(_liker_id))
+            if (!_db.has_account(_liker_id).first)
             {
                 return false;
             }

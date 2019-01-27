@@ -110,8 +110,7 @@ struct RequestHandler<SuggestForAccount>
     {
         std::vector<Similarity> similarity_list;
 
-        auto &index = db.account.get<DB::id_tag>();
-        auto &account = index.find(request.search.account_id)->account();
+        auto &account = *request.search.account_it;
         for (auto like_it = account.like_list.begin(); like_it != account.like_list.end();)
         {
             auto like_id = like_it->id;
@@ -186,7 +185,7 @@ struct RequestHandler<SuggestForAccount>
                 {
                     while (first1 != last1 && !result.is_full())
                     {
-                        result.add_account(index.find(first1->id)->account());
+                        result.add_account(*db.find_account(first1->id));
                         next_account(first1, last1);
                     }
                     break;
@@ -194,7 +193,7 @@ struct RequestHandler<SuggestForAccount>
 
                 if (first1->id > first2->id)
                 {
-                    result.add_account(index.find(first1->id)->account());
+                    result.add_account(*db.find_account(first1->id));
                     next_account(first1, last1);
                 }
                 else

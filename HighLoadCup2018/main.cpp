@@ -43,12 +43,15 @@ int main(int argc, char *argv[])
     });
 
     std::string data_path(argv[1]);
+    int is_rating_data = 0;
     {
         std::ifstream options_file(data_path + "/options.txt");
-        options_file >> db.current_time;
+        options_file >> db.current_time >> is_rating_data;
     }
 
-    for (std::size_t i = 1; i <= 130; ++i)
+    db.account.reserve(is_rating_data == 1 ? 1'300'000 : 30'000);
+
+    for (int i = 1; i <= (is_rating_data == 1 ? 130 : 3); ++i)
     {
         std::string filename = data_path + "/accounts_" + std::to_string(i) + ".json";
 

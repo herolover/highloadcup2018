@@ -51,7 +51,7 @@ struct GroupAccounts
 
 struct SearchForAccount
 {
-    uint32_t account_id;
+    DB::AccountIt account_it;
     Filter filter;
     uint8_t limit;
 };
@@ -74,7 +74,7 @@ struct AddAccount
 
 struct UpdateAccount
 {
-    uint32_t account_id;
+    DB::AccountIt account_it;
     const char *body;
     std::size_t size;
 };
@@ -306,13 +306,19 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             else
             {
                 UpdateAccount update_account;
-                auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), update_account.account_id);
+                uint32_t account_id = 0;
+                auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), account_id);
 
-                if (ec == std::errc() && db.has_account(update_account.account_id))
+                bool has_account = false;
+                if (ec == std::errc())
                 {
-                    update_account.body = request.body().data();
-                    update_account.size = request.body().size();
-                    result = std::move(update_account);
+                    std::tie(has_account, update_account.account_it) = db.has_account_with_lock(account_id);
+                    if (has_account)
+                    {
+                        update_account.body = request.body().data();
+                        update_account.size = request.body().size();
+                        result = std::move(update_account);
+                    }
                 }
                 else
                 {
@@ -323,66 +329,71 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
         else if (target_parts.size() == 3 && (target_parts[2] == "recommend"sv || target_parts[2] == "suggest"sv))
         {
             SearchForAccount search;
-            auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), search.account_id);
+            uint32_t account_id = 0;
+            auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), account_id);
 
-            auto &index = db.account.get<DB::id_tag>();
-            if (ec == std::errc() && search.account_id > 0 && index.find(search.account_id) != index.end())
+            if (ec == std::errc())
             {
-                bool is_valid = true;
-                bool has_limit = false;
-                for (auto &param : split(params, '&'))
+                bool has_account = false;
+                std::tie(has_account, search.account_it) = db.has_account(account_id);
+                if (has_account)
                 {
-                    auto key_value = split(param, '=');
-                    if (key_value.size() != 2 || key_value[1] == ""sv)
+                    bool is_valid = true;
+                    bool has_limit = false;
+                    for (auto &param : split(params, '&'))
                     {
-                        is_valid = false;
-                        break;
-                    }
-                    if (key_value[0] == "limit"sv)
-                    {
-                        auto[p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), search.limit);
-                        if (ec == std::errc() && search.limit != 0)
-                        {
-                            has_limit = true;
-                        }
-                        else
+                        auto key_value = split(param, '=');
+                        if (key_value.size() != 2 || key_value[1] == ""sv)
                         {
                             is_valid = false;
                             break;
                         }
+                        if (key_value[0] == "limit"sv)
+                        {
+                            auto[p, ec] = std::from_chars(key_value[1].data(), key_value[1].data() + key_value[1].size(), search.limit);
+                            if (ec == std::errc() && search.limit != 0)
+                            {
+                                has_limit = true;
+                            }
+                            else
+                            {
+                                is_valid = false;
+                                break;
+                            }
+                        }
+                        else if (key_value[0] == "country"sv)
+                        {
+                            search.filter.field = f_country();
+                            search.filter.method = m_eq();
+                            search.filter.value = t_value<f_country, m_eq>()(db, key_value[1]);
+                        }
+                        else if (key_value[0] == "city"sv)
+                        {
+                            search.filter.field = f_city();
+                            search.filter.method = m_eq();
+                            search.filter.value = t_value<f_city, m_eq>()(db, key_value[1]);
+                        }
                     }
-                    else if (key_value[0] == "country"sv)
-                    {
-                        search.filter.field = f_country();
-                        search.filter.method = m_eq();
-                        search.filter.value = t_value<f_country, m_eq>()(db, key_value[1]);
-                    }
-                    else if (key_value[0] == "city"sv)
-                    {
-                        search.filter.field = f_city();
-                        search.filter.method = m_eq();
-                        search.filter.value = t_value<f_city, m_eq>()(db, key_value[1]);
-                    }
-                }
 
-                if (is_valid && has_limit)
-                {
-                    if (target_parts[2] == "recommend"sv)
+                    if (is_valid && has_limit)
                     {
-                        RecommendForAccount recommend;
-                        recommend.search = std::move(search);
-                        result = std::move(recommend);
+                        if (target_parts[2] == "recommend"sv)
+                        {
+                            RecommendForAccount recommend;
+                            recommend.search = std::move(search);
+                            result = std::move(recommend);
+                        }
+                        else
+                        {
+                            SuggestForAccount suggest;
+                            suggest.search = std::move(search);
+                            result = std::move(suggest);
+                        }
                     }
                     else
                     {
-                        SuggestForAccount suggest;
-                        suggest.search = std::move(search);
-                        result = std::move(suggest);
+                        std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
                     }
-                }
-                else
-                {
-                    std::get<BadRequest>(result).status = boost::beast::http::status::bad_request;
                 }
             }
         }

@@ -132,7 +132,7 @@ struct RequestHandler<RecommendForAccount>
 
     static void handle(DB &db, RecommendForAccount &request, HttpServer::HttpResponse &response)
     {
-        auto &account = db.account.get<DB::id_tag>().find(request.search.account_id)->account();
+        auto &account = *request.search.account_it;
 
         using IterType = typename DB::InterestIndex::index<DB::recommend_tag>::type::iterator;
         std::vector<std::pair<IterType, IterType>> range_list;

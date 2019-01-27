@@ -28,7 +28,6 @@ namespace mi = boost::multi_index;
 
 struct DB
 {
-    struct id_tag {};
     struct email_tag {};
     struct email_domain_tag {};
     struct first_name_tag {};
@@ -46,12 +45,9 @@ struct DB
     struct like_tag {};
 
     // *INDENT-OFF*
-    mi::multi_index_container<Account,
+    using AccountIndex = mi::multi_index_container<Account,
         mi::indexed_by<
-            mi::ordered_unique<
-                mi::tag<id_tag>,
-                mi::member<Account, uint32_t, &Account::id>
-            >,
+            mi::random_access<>,
             mi::ordered_unique<
                 mi::tag<email_tag>,
                 mi::composite_key<Account,
@@ -176,10 +172,10 @@ struct DB
                 >
             >
         >
-    > account;
+    >;
     // *INDENT-ON*
 
-    using AccountIt = decltype(account)::index<id_tag>::type::iterator;
+    using AccountIt = AccountIndex::iterator;
 
     class AccountReference
     {
@@ -272,6 +268,7 @@ struct DB
     // *INDENT-ON*
 
     std::mutex m;
+    AccountIndex account;
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
     std::vector<std::unique_ptr<std::string>> interest_list;
@@ -296,10 +293,24 @@ struct DB
         return std::string_view((*it)->data(), (*it)->size());
     }
 
-    bool has_account(uint32_t account_id)
+    auto find_account(uint32_t account_id)
+    {
+        return std::lower_bound(account.begin(), account.end(), account_id, [](const Account &a, uint32_t account_id)
+        {
+            return a.id < account_id;
+        });
+    }
+
+    std::pair<bool, AccountIt> has_account(uint32_t account_id)
+    {
+        auto it = find_account(account_id);
+        return std::make_pair(it != account.end() && it->id == account_id, it);
+    }
+
+    std::pair<bool, AccountIt> has_account_with_lock(uint32_t account_id)
     {
         std::lock_guard lock(m);
-        return account.find(account_id) != account.end();
+        return has_account(account_id);
     }
 
     void add_like_list(const std::vector<std::tuple<uint32_t, uint32_t, int32_t>> &like_list)
@@ -309,7 +320,7 @@ struct DB
         {
             std::apply([this](uint32_t likee_id, uint32_t liker_id, int32_t like_ts)
             {
-                auto it = account.find(liker_id);
+                auto it = find_account(liker_id);
                 account.modify(it, [likee_id, like_ts](Account &a)
                 {
                     a.add_like(likee_id, like_ts);
@@ -329,7 +340,10 @@ struct DB
             return false;
         }
 
-        auto result = account.insert(std::move(new_account));
+        auto result = account.insert(std::upper_bound(account.begin(), account.end(), new_account.id, [](uint32_t account_id, const Account &a)
+        {
+            return account_id < a.id;
+        }), std::move(new_account));
         if (result.second)
         {
             AccountReference account_reference(result.first);
@@ -360,7 +374,7 @@ struct DB
         return result.second;
     }
 
-    bool update_account(Account &&update_account)
+    bool update_account(AccountIt account_it, Account &&update_account)
     {
         std::lock_guard lock(m);
         if (!update_account.email.empty() && account.get<email_tag>().find(update_account.email) != account.get<email_tag>().end())
@@ -372,121 +386,114 @@ struct DB
             return false;
         }
 
-        auto &index = account.get<id_tag>();
-        auto it = index.find(update_account.id);
-        if (it != index.end())
+        auto result = account.modify(account_it, [this, update_account = std::move(update_account), account_it](Account &a) mutable
         {
-            auto result = index.modify(it, [this, update_account = std::move(update_account), &it](Account &a) mutable
+            if (!update_account.email.empty())
             {
-                if (!update_account.email.empty())
+                a.email = std::move(update_account.email);
+                a.email_domain = std::move(update_account.email_domain);
+            }
+            if (update_account.first_name)
+            {
+                a.first_name = update_account.first_name;
+            }
+            if (update_account.second_name)
+            {
+                a.second_name = update_account.second_name;
+            }
+            if (!update_account.phone.empty())
+            {
+                a.phone = std::move(update_account.phone);
+                a.phone_code = std::move(update_account.phone_code);
+            }
+            if (update_account.sex != Account::Sex::INVALID)
+            {
+                a.sex = update_account.sex;
+            }
+            if (update_account.birth != 0)
+            {
+                a.birth = update_account.birth;
+                a.birth_year = update_account.birth_year;
+            }
+            if (update_account.country)
+            {
+                a.country = update_account.country;
+            }
+            if (update_account.city)
+            {
+                a.city = update_account.city;
+            }
+            if (update_account.joined != 0)
+            {
+                a.joined = update_account.joined;
+                a.joined_year = update_account.joined_year;
+            }
+            bool update_interests = false;
+            if (update_account.status != Account::Status::INVALID)
+            {
+                a.status = update_account.status;
+                update_interests = true;
+            }
+            if (update_account.premium_status != Account::PremiumStatus::NO)
+            {
+                a.premium_status = update_account.premium_status;
+                a.premium_start = update_account.premium_start;
+                a.premium_finish = update_account.premium_finish;
+                update_interests = true;
+            }
+            if (!update_account.interest_list.empty())
+            {
+                AccountReference account_reference(account_it);
+                for (auto &account_interest : a.interest_list)
                 {
-                    a.email = std::move(update_account.email);
-                    a.email_domain = std::move(update_account.email_domain);
+                    auto &account_list = interest_account_list[account_interest];
+                    account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
                 }
-                if (update_account.first_name)
-                {
-                    a.first_name = update_account.first_name;
-                }
-                if (update_account.second_name)
-                {
-                    a.second_name = update_account.second_name;
-                }
-                if (!update_account.phone.empty())
-                {
-                    a.phone = std::move(update_account.phone);
-                    a.phone_code = std::move(update_account.phone_code);
-                }
-                if (update_account.sex != Account::Sex::INVALID)
-                {
-                    a.sex = update_account.sex;
-                }
-                if (update_account.birth != 0)
-                {
-                    a.birth = update_account.birth;
-                    a.birth_year = update_account.birth_year;
-                }
-                if (update_account.country)
-                {
-                    a.country = update_account.country;
-                }
-                if (update_account.city)
-                {
-                    a.city = update_account.city;
-                }
-                if (update_account.joined != 0)
-                {
-                    a.joined = update_account.joined;
-                    a.joined_year = update_account.joined_year;
-                }
-                bool update_interests = false;
-                if (update_account.status != Account::Status::INVALID)
-                {
-                    a.status = update_account.status;
-                    update_interests = true;
-                }
-                if (update_account.premium_status != Account::PremiumStatus::NO)
-                {
-                    a.premium_status = update_account.premium_status;
-                    a.premium_start = update_account.premium_start;
-                    a.premium_finish = update_account.premium_finish;
-                    update_interests = true;
-                }
-                if (!update_account.interest_list.empty())
-                {
-                    AccountReference account_reference(it);
-                    for (auto &account_interest : a.interest_list)
-                    {
-                        auto &account_list = interest_account_list[account_interest];
-                        account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
-                    }
 
-                    a.interest_list = std::move(update_account.interest_list);
-                    a.interest_mask = update_account.interest_mask;
+                a.interest_list = std::move(update_account.interest_list);
+                a.interest_mask = update_account.interest_mask;
 
-                    for (auto &account_interest : a.interest_list)
-                    {
-                        auto &account_list = interest_account_list[account_interest];
-                        account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
-                    }
-                }
-                else if (update_interests)
+                for (auto &account_interest : a.interest_list)
                 {
-                    AccountReference account_reference(it);
-                    for (auto &account_interest : a.interest_list)
-                    {
-                        auto &account_list = interest_account_list[account_interest];
-                        account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
-                    }
-
-                    for (auto &account_interest : a.interest_list)
-                    {
-                        auto &account_list = interest_account_list[account_interest];
-                        account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
-                    }
+                    auto &account_list = interest_account_list[account_interest];
+                    account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
                 }
-                if (!update_account.like_list.empty())
+            }
+            else if (update_interests)
+            {
+                AccountReference account_reference(account_it);
+                for (auto &account_interest : a.interest_list)
                 {
-                    AccountReference account_reference(it);
-                    for (auto &like : a.like_list)
-                    {
-                        auto &account_list = liked_by[like.id];
-                        account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
-                    }
-
-                    a.like_list = std::move(update_account.like_list);
-
-                    for (auto &like : a.like_list)
-                    {
-                        auto &account_list = liked_by[like.id];
-                        account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
-                    }
+                    auto &account_list = interest_account_list[account_interest];
+                    account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
                 }
-            });
 
-            return result;
-        }
+                for (auto &account_interest : a.interest_list)
+                {
+                    auto &account_list = interest_account_list[account_interest];
+                    account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
+                }
+            }
+            if (!update_account.like_list.empty())
+            {
+                AccountReference account_reference(account_it);
+                for (auto &like : a.like_list)
+                {
+                    auto &account_list = liked_by[like.id];
+                    account_list.erase(std::lower_bound(account_list.begin(), account_list.end(), account_reference));
+                }
 
-        return false;
+                a.like_list = std::move(update_account.like_list);
+
+                for (auto &like : a.like_list)
+                {
+                    auto &account_list = liked_by[like.id];
+                    account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
+                }
+            }
+        });
+
+        return result;
     }
 
     Account::interest_mask_t get_interest_mask(std::string_view interest)
@@ -521,10 +528,9 @@ struct DB
 
     void compute_interest_mask()
     {
-        auto &index = account.get<id_tag>();
-        for (auto account_it = index.begin(); account_it != index.end(); ++account_it)
+        for (auto account_it = account.begin(); account_it != account.end(); ++account_it)
         {
-            index.modify(account_it, [this](Account &a)
+            account.modify(account_it, [this](Account &a)
             {
                 a.interest_mask = get_interest_mask(a.interest_list);
             });
