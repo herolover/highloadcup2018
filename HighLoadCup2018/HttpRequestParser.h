@@ -41,10 +41,89 @@ struct FilterAccounts
     uint8_t limit;
 };
 
+// *INDENT-OFF*
+using GroupKey = std::variant<
+     invalid,
+     f_sex,
+     f_status,
+     f_country,
+     f_city,
+     f_interests,
+     std::pair<f_city, f_sex>,
+     std::pair<f_city, f_status>,
+     std::pair<f_country, f_sex>,
+     std::pair<f_country, f_status>>;
+// *INDENT-ON*
+
+template<class T>
+struct GroupKeyTrait
+{
+    using type = std::string_view;
+
+    static std::string_view key_name()
+    {
+        return T::name;
+    }
+};
+
+template<class T1, class T2>
+struct GroupKeyTrait<std::pair<T1, T2>>
+{
+    using type = std::pair<std::string_view, std::string_view>;
+
+    static std::pair<std::string_view, std::string_view> key_name()
+    {
+        return std::make_pair(T1::name, T2::name);
+    }
+};
+
+GroupKey make_group_key(std::string_view value)
+{
+    if (value == "sex")
+    {
+        return f_sex();
+    }
+    else if (value == "status")
+    {
+        return f_status();
+    }
+    else if (value == "country")
+    {
+        return f_country();
+    }
+    else if (value == "city")
+    {
+        return f_city();
+    }
+    else if (value == "interests")
+    {
+        return f_interests();
+    }
+    else if (value == "city,sex")
+    {
+        return std::make_pair(f_city(), f_sex());
+    }
+    else if (value == "city,status")
+    {
+        return std::make_pair(f_city(), f_status());
+    }
+    else if (value == "country,sex")
+    {
+        return std::make_pair(f_country(), f_sex());
+    }
+    else if (value == "country,status")
+    {
+        return std::make_pair(f_country(), f_status());
+    }
+
+    return invalid();
+}
+
 struct GroupAccounts
 {
     std::vector<Filter> filter;
-    std::vector<Field> key;
+    Filter likes_filter;
+    GroupKey group_key;
     bool is_large_first;
     uint8_t limit;
 };
@@ -97,6 +176,11 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
     ParsedRequest result = BadRequest();
 
     auto pos = decoded_target.find('?');
+    if (pos == std::string_view::npos)
+    {
+        return result;
+    }
+
     auto target = std::string_view(decoded_target.data() + 1, pos - 2);
     auto params = std::string_view(decoded_target.data() + pos + 1, decoded_target.size() - pos - 1);
 
@@ -201,21 +285,8 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                     if (key_value[0] == "keys"sv)
                     {
                         has_keys = true;
-
-                        for (auto &key : split(key_value[1]))
-                        {
-                            auto field = make_field(key);
-                            is_valid = std::visit([](auto &&field)
-                            {
-                                return boost::mp11::mp_contains<boost::mp11::mp_list<f_sex, f_status, f_interests, f_country, f_city>, std::decay_t<decltype(field)>>::value;
-                            }, field);
-                            if (!is_valid)
-                            {
-                                break;
-                            }
-                            group_accounts.key.push_back(std::move(field));
-                        }
-
+                        group_accounts.group_key = make_group_key(key_value[1]);
+                        is_valid = group_accounts.group_key.index() != 0;
                         if (!is_valid)
                         {
                             break;
@@ -275,6 +346,10 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                             }, field);
 
                             group_accounts.filter.push_back(Filter{std::move(field), std::move(method), std::move(value)});
+                            if (std::holds_alternative<f_likes>(field))
+                            {
+                                group_accounts.likes_filter = group_accounts.filter.back();
+                            }
                         }
                         else
                         {

@@ -8,217 +8,290 @@
 #include <list>
 #include <algorithm>
 
+template<class T>
+struct GroupCounter
+{
+    T key;
+    uint32_t count;
+
+    bool operator<(const T &another_key) const
+    {
+        return key < another_key;
+    }
+
+    bool operator<(const GroupCounter &group_counter) const
+    {
+        return std::make_tuple(count, key) < std::make_tuple(group_counter.count, group_counter.key);
+    }
+
+    bool operator>(const GroupCounter &group_counter) const
+    {
+        return std::make_tuple(count, key) > std::make_tuple(group_counter.count, group_counter.key);
+    }
+};
+
+template<class T>
+struct GroupCounterList
+{
+    std::vector<GroupCounter<T>> group_counter;
+
+    void count_key(const T &key)
+    {
+        auto it = std::lower_bound(group_counter.begin(), group_counter.end(), key);
+        if (it != group_counter.end() && it->key == key)
+        {
+            ++it->count;
+        }
+        else
+        {
+            group_counter.insert(it, GroupCounter<T> {key, 1});
+        }
+    }
+
+    void count_key(const T &key, std::size_t count)
+    {
+        auto it = std::lower_bound(group_counter.begin(), group_counter.end(), key);
+        if (it != group_counter.end() && it->key == key)
+        {
+            it->count += count;
+        }
+        else
+        {
+            group_counter.insert(it, GroupCounter<T> {key, count});
+        }
+    }
+
+    void sort(std::size_t limit, bool is_large_first)
+    {
+        if (limit > group_counter.size())
+        {
+            limit = group_counter.size();
+        }
+
+        if (is_large_first)
+        {
+            std::partial_sort(group_counter.begin(), group_counter.begin() + limit, group_counter.end(), std::greater<GroupCounter<T>>());
+        }
+        else
+        {
+            std::partial_sort(group_counter.begin(), group_counter.begin() + limit, group_counter.end());
+        }
+    }
+};
+
+template<class F, class T>
+void count_by_field(const Account &account, GroupCounterList<T> &group_counter)
+{
+}
+
+template<>
+void count_by_field<f_sex, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+{
+    group_counter.count_key(convert_sex(account.sex));
+}
+
+template<>
+void count_by_field<f_status, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+{
+    group_counter.count_key(convert_account_status(account.status));
+}
+
+template<>
+void count_by_field<f_city, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+{
+    if (account.city)
+    {
+        group_counter.count_key((std::string_view)*account.city);
+    }
+}
+
+template<>
+void count_by_field<f_country, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+{
+    if (account.country)
+    {
+        group_counter.count_key((std::string_view)*account.country);
+    }
+}
+
+template<>
+void count_by_field<f_interests, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+{
+    for (auto &interest : account.interest_list)
+    {
+        group_counter.count_key(interest);
+    }
+}
+
+template<>
+void count_by_field<std::pair<f_city, f_sex>, std::pair<std::string_view, std::string_view>>(const Account &account,
+                                                                                             GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+{
+    if (account.city)
+    {
+        group_counter.count_key(std::make_pair((std::string_view)*account.city, convert_sex(account.sex)));
+    }
+}
+
+template<>
+void count_by_field<std::pair<f_city, f_status>, std::pair<std::string_view, std::string_view>>(const Account &account,
+                                                                                                GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+{
+    if (account.city)
+    {
+        group_counter.count_key(std::make_pair((std::string_view)*account.city, convert_account_status(account.status)));
+    }
+}
+
+template<>
+void count_by_field<std::pair<f_country, f_sex>, std::pair<std::string_view, std::string_view>>(const Account &account,
+                                                                                                GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+{
+    if (account.country)
+    {
+        group_counter.count_key(std::make_pair((std::string_view)*account.country, convert_sex(account.sex)));
+    }
+}
+
+template<>
+void count_by_field<std::pair<f_country, f_status>, std::pair<std::string_view, std::string_view>>(const Account &account,
+                                                                                                   GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+{
+    if (account.country)
+    {
+        group_counter.count_key(std::make_pair((std::string_view)*account.country, convert_account_status(account.status)));
+    }
+}
+
 template<>
 struct RequestHandler<GroupAccounts>
 {
-    using GroupKey = std::variant<Account::Sex, Account::Status, std::string_view>;
-
-    struct JSONResult
+    template<class T>
+    static void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
     {
-        rapidjson::Document document;
-        rapidjson::Value group_array;
-        rapidjson::StringBuffer buffer;
+        group.AddMember(rapidjson::StringRef(key.data(), key.size()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
+    }
 
-        JSONResult()
-            : group_array(rapidjson::kArrayType)
+    template<>
+    static void add_json_document_member<std::pair<std::string_view, std::string_view>>(rapidjson::Document &document, rapidjson::Value &group,
+                                                                                        const std::pair<std::string_view, std::string_view> &key,
+                                                                                        const std::pair<std::string_view, std::string_view> &value)
+    {
+        group.AddMember(rapidjson::StringRef(key.first.data(), key.first.size()), rapidjson::StringRef(value.first.data(), value.first.size()), document.GetAllocator());
+        group.AddMember(rapidjson::StringRef(key.second.data(), key.second.size()), rapidjson::StringRef(value.second.data(), value.second.size()), document.GetAllocator());
+    }
+
+    template<class T>
+    class JSONResult
+    {
+    public:
+        JSONResult(std::size_t limit, const T &key)
+            : _group_array(rapidjson::kArrayType)
+            , _limit(limit)
+            , _key(key)
         {
-            document.SetObject();
+            _document.SetObject();
         }
 
-        void add_group(const std::string_view &key_name, const GroupKey &value, uint32_t counter)
+        bool is_full() const
+        {
+            return _group_array.Size() == _limit;
+        }
+
+        void add_group(const T &value, uint32_t counter)
         {
             rapidjson::Value group(rapidjson::kObjectType);
-            std::visit([this, &key_name, &group](auto &&value)
-            {
-                using key_value_type = std::decay_t<decltype(value)>;
-                if constexpr(std::is_same_v<Account::Sex, key_value_type>)
-                {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_sex(value)), document.GetAllocator());
-                }
-                else if constexpr(std::is_same_v<Account::Status, key_value_type>)
-                {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(convert_account_status(value)), document.GetAllocator());
-                }
-                else if constexpr(std::is_same_v<std::string_view, key_value_type>)
-                {
-                    group.AddMember(rapidjson::StringRef(key_name.data()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
-                }
-            }, value);
-            group.AddMember("count", counter, document.GetAllocator());
+            add_json_document_member(_document, group, _key, value);
+            group.AddMember("count", counter, _document.GetAllocator());
 
-            group_array.PushBack(std::move(group), document.GetAllocator());
+            _group_array.PushBack(std::move(group), _document.GetAllocator());
         }
 
         const char *get_json()
         {
-            document.AddMember("groups", std::move(group_array), document.GetAllocator());
+            _document.AddMember("groups", std::move(_group_array), _document.GetAllocator());
 
-            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(buffer);
-            document.Accept(writer);
+            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(_buffer);
+            _document.Accept(writer);
 
-            return buffer.GetString();
+            return _buffer.GetString();
         }
+
+    private:
+        rapidjson::Document _document;
+        rapidjson::Value _group_array;
+        rapidjson::StringBuffer _buffer;
+        std::size_t _limit;
+        T _key;
     };
 
-    struct GroupCounter
+    static bool is_suitable_account(const GroupAccounts &request, const Account &account)
     {
-        GroupKey key;
-        uint32_t counter;
-
-        bool operator<(const GroupKey &another) const
+        bool is_suitable = true;
+        for (auto &filter : request.filter)
         {
-            return key < another;
-        }
-
-        bool operator>(const GroupKey &another) const
-        {
-            return key > another;
-        }
-
-        bool operator<(const GroupCounter &another) const
-        {
-            return key < another.key;
-        }
-
-        bool operator>(const GroupCounter &another) const
-        {
-            return key > another.key;
-        }
-    };
-
-    template<class BeginIt, class EndIt>
-    static void filter(const GroupAccounts &request, HttpServer::HttpResponse &response, BeginIt &&begin, EndIt &&end)
-    {
-        std::vector<GroupCounter> single_key;
-        auto count_key = [&single_key](const GroupKey &key)
-        {
-            auto it = std::lower_bound(single_key.begin(), single_key.end(), key);
-            if (it != single_key.end() && it->key == key)
+            bool check_result = std::visit([&account, &filter](auto &&field, auto &&method)
             {
-                ++it->counter;
-            }
-            else
-            {
-                single_key.insert(it, GroupCounter{key, 1});
-            }
-        };
+                return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
+            }, filter.field, filter.method);
 
-        for (; begin != end; ++begin)
-        {
-            auto &account = begin->account();
-
-            bool is_suitable = true;
-            for (auto &filter : request.filter)
+            if (!check_result)
             {
-                bool check_result = std::visit([&account, &filter](auto &&field, auto &&method)
-                {
-                    return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
-                }, filter.field, filter.method);
-
-                if (!check_result)
-                {
-                    is_suitable = false;
-                    break;
-                }
-            }
-            if (is_suitable)
-            {
-                if (request.key.size() == 1)
-                {
-                    std::visit([&account, &count_key](auto &&field)
-                    {
-                        using field_type = std::decay_t<decltype(field)>;
-                        if constexpr(std::is_same_v<f_sex, field_type>)
-                        {
-                            count_key(account.sex);
-                        }
-                        else if constexpr(std::is_same_v<f_status, field_type>)
-                        {
-                            count_key(account.status);
-                        }
-                        else if constexpr(std::is_same_v<f_interests, field_type>)
-                        {
-                            for (auto &interest : account.interest_list)
-                            {
-                                count_key(interest);
-                            }
-                        }
-                        else if constexpr(std::is_same_v<f_country, field_type>)
-                        {
-                            if (account.country)
-                            {
-                                count_key((std::string_view)*account.country);
-                            }
-                        }
-                        else if constexpr(std::is_same_v<f_city, field_type>)
-                        {
-                            if (account.city)
-                            {
-                                count_key((std::string_view)*account.city);
-                            }
-                        }
-                    }, request.key[0]);
-                }
+                is_suitable = false;
+                break;
             }
         }
 
-        auto limit = single_key.size();
-        if (limit > request.limit)
-        {
-            limit = request.limit;
-        }
-
-        if (request.is_large_first)
-        {
-            std::partial_sort(single_key.begin(), single_key.begin() + limit, single_key.end(), [](const auto &a, const auto &b)
-            {
-                return a.counter > b.counter;
-            });
-        }
-        else
-        {
-            std::partial_sort(single_key.begin(), single_key.begin() + limit, single_key.end(), [](const auto &a, const auto &b)
-            {
-                return a.counter < b.counter;
-            });
-        }
-
-        JSONResult result;
-        std::size_t counter = 0;
-        for (auto it = single_key.begin(); it != single_key.end() && counter < request.limit; ++it, ++counter)
-        {
-            std::visit([&result, &it](auto &&field)
-            {
-                using field_type = std::decay_t<decltype(field)>;
-                result.add_group(field_type::name, it->key, it->counter);
-            }, request.key[0]);
-        }
-
-        response.result(boost::beast::http::status::ok);
-        response.body() = result.get_json();
-        response.prepare_payload();
+        return is_suitable;
     }
 
     static void handle(DB &db, GroupAccounts &request, HttpServer::HttpResponse &response)
     {
-        response.result(boost::beast::http::status::not_implemented);
-        response.prepare_payload();
-        if (request.filter.empty())
+        std::visit([&](auto &&group_key)
         {
-        }
-        else if (request.filter.size() == 1 && std::holds_alternative<f_likes>(request.filter.front().field))
-        {
-            auto &likes_filter = request.filter.front();
-            std::visit([&db, &request, &response, &likes_filter](auto &&field, auto &&method)
+            using group_key_type = std::decay_t<decltype(group_key)>;
+            using group_key_result_type = typename GroupKeyTrait<group_key_type>::type;
+            GroupCounterList<group_key_result_type> group_counter;
+
+            if (request.filter.empty())
             {
-                t_select<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(db, likes_filter.value, [&db, &request, &response](auto &&range)
+            }
+            else if (request.likes_filter.field.index() != 0)
+            {
+                t_select<f_likes, m_eq>()(db, request.likes_filter.value, [&](auto &&range)
                 {
-                    filter(request, response, range.first, range.second);
+                    auto begin = range.first;
+                    auto end = range.second;
+                    for (; begin != end; ++begin)
+                    {
+                        auto &account = begin->account();
+                        if (is_suitable_account(request, account))
+                        {
+                            count_by_field<group_key_type, group_key_result_type>(account, group_counter);
+                        }
+                    }
                 });
-            }, likes_filter.field, likes_filter.method);
-        }
-        else
-        {
-        }
+            }
+            else
+            {
+            }
+
+            group_counter.sort(request.limit, request.is_large_first);
+
+            JSONResult<group_key_result_type> result(request.limit, GroupKeyTrait<group_key_type>::key_name());
+            for (auto &group : group_counter.group_counter)
+            {
+                if (result.is_full())
+                {
+                    break;
+                }
+
+                result.add_group(group.key, group.count);
+            }
+
+            response.result(boost::beast::http::status::ok);
+            response.body() = result.get_json();
+            response.prepare_payload();
+        }, request.group_key);
     }
 };

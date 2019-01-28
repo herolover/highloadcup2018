@@ -267,6 +267,91 @@ struct DB
     >;
     // *INDENT-ON*
 
+    struct Group
+    {
+        Account::city_t city;
+        Account::country_t country;
+        Account::Status status;
+        Account::Sex sex;
+
+        std::size_t count = 0;
+        std::map<uint16_t, std::size_t> birth_year_count;
+        std::map<uint16_t, std::size_t> joined_year_count;
+
+        Group(const Account &a)
+            : city(a.city)
+            , country(a.country)
+            , status(a.status)
+            , sex(a.sex)
+        {
+        }
+        Group(const Group &) = default;
+        Group(Group &&) = default;
+
+        Group &operator=(const Group &) = default;
+        Group &operator=(Group &&) = default;
+
+        void add_account(const Account &a)
+        {
+            ++count;
+            ++birth_year_count[a.birth_year];
+            ++joined_year_count[a.joined_year];
+        }
+
+        void remove_account(const Account &a)
+        {
+            --count;
+            --birth_year_count[a.birth_year];
+            --joined_year_count[a.joined_year];
+        }
+
+        bool operator<(const Group &g) const
+        {
+            return std::tie(city, country, status, sex) < std::tie(g.city, g.country, g.status, g.sex);
+        }
+
+        bool operator==(const Group &g) const
+        {
+            return std::tie(city, country, status, sex) == std::tie(g.city, g.country, g.status, g.sex);
+        }
+    };
+
+    struct GroupIndex
+    {
+        std::vector<Group> group_list;
+
+        std::pair<bool, std::vector<Group>::iterator> find_group(const Group &group)
+        {
+            auto it = std::lower_bound(group_list.begin(), group_list.end(), group);
+            return std::make_pair(it != group_list.end() && *it == group, it);
+        }
+
+        void add_account(const Account &account)
+        {
+            Group group(account);
+            auto res = find_group(group);
+            if (res.first)
+            {
+                res.second->add_account(account);
+            }
+            else
+            {
+                group.add_account(account);
+                group_list.insert(res.second, std::move(group));
+            }
+        }
+
+        void remove_account(const Account &account)
+        {
+            Group group(account);
+            auto res = find_group(group);
+            if (res.first)
+            {
+                res.second->remove_account(account);
+            }
+        }
+    };
+
     std::mutex m;
     AccountIndex account;
     std::vector<Account::first_name_t> male_first_name;
@@ -274,6 +359,7 @@ struct DB
     std::vector<std::unique_ptr<std::string>> interest_list;
     std::map<std::string_view, InterestIndex> interest_account_list;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
+    GroupIndex group_index;
 
     int32_t current_time = 0;
 
@@ -369,6 +455,8 @@ struct DB
                 auto &liked_by_account_list = liked_by[like.id];
                 liked_by_account_list.insert(std::upper_bound(liked_by_account_list.begin(), liked_by_account_list.end(), account_reference), account_reference);
             }
+
+            group_index.add_account(account_reference.account());
         }
 
         return result.second;
@@ -388,6 +476,8 @@ struct DB
 
         auto result = account.modify(account_it, [this, update_account = std::move(update_account), account_it](Account &a) mutable
         {
+            group_index.remove_account(a);
+
             if (!update_account.email.empty())
             {
                 a.email = std::move(update_account.email);
@@ -491,6 +581,8 @@ struct DB
                     account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
                 }
             }
+
+            group_index.add_account(a);
         });
 
         return result;
