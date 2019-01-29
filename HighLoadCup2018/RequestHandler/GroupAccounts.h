@@ -247,7 +247,7 @@ struct is_suitable_group
 };
 
 template<class T>
-static void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
+void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
 {
     if (value != ""sv)
     {
@@ -256,9 +256,9 @@ static void add_json_document_member(rapidjson::Document &document, rapidjson::V
 }
 
 template<>
-static void add_json_document_member<std::pair<std::string_view, std::string_view>>(rapidjson::Document &document, rapidjson::Value &group,
-                                                                                    const std::pair<std::string_view, std::string_view> &key,
-                                                                                    const std::pair<std::string_view, std::string_view> &value)
+void add_json_document_member<std::pair<std::string_view, std::string_view>>(rapidjson::Document &document, rapidjson::Value &group,
+                                                                             const std::pair<std::string_view, std::string_view> &key,
+                                                                             const std::pair<std::string_view, std::string_view> &value)
 {
     if (value.first != ""sv)
     {
