@@ -246,74 +246,74 @@ struct is_suitable_group
     }
 };
 
+template<class T>
+static void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
+{
+    if (value != ""sv)
+    {
+        group.AddMember(rapidjson::StringRef(key.data(), key.size()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
+    }
+}
+
+template<>
+static void add_json_document_member<std::pair<std::string_view, std::string_view>>(rapidjson::Document &document, rapidjson::Value &group,
+                                                                                    const std::pair<std::string_view, std::string_view> &key,
+                                                                                    const std::pair<std::string_view, std::string_view> &value)
+{
+    if (value.first != ""sv)
+    {
+        group.AddMember(rapidjson::StringRef(key.first.data(), key.first.size()), rapidjson::StringRef(value.first.data(), value.first.size()), document.GetAllocator());
+    }
+    group.AddMember(rapidjson::StringRef(key.second.data(), key.second.size()), rapidjson::StringRef(value.second.data(), value.second.size()), document.GetAllocator());
+}
+
+template<class T>
+class JSONResult
+{
+public:
+    JSONResult(std::size_t limit, const T &key)
+        : _group_array(rapidjson::kArrayType)
+        , _limit(limit)
+        , _key(key)
+    {
+        _document.SetObject();
+    }
+
+    bool is_full() const
+    {
+        return _group_array.Size() == _limit;
+    }
+
+    void add_group(const T &value, uint32_t counter)
+    {
+        rapidjson::Value group(rapidjson::kObjectType);
+        add_json_document_member(_document, group, _key, value);
+        group.AddMember("count", counter, _document.GetAllocator());
+
+        _group_array.PushBack(std::move(group), _document.GetAllocator());
+    }
+
+    const char *get_json()
+    {
+        _document.AddMember("groups", std::move(_group_array), _document.GetAllocator());
+
+        rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(_buffer);
+        _document.Accept(writer);
+
+        return _buffer.GetString();
+    }
+
+private:
+    rapidjson::Document _document;
+    rapidjson::Value _group_array;
+    rapidjson::StringBuffer _buffer;
+    std::size_t _limit;
+    T _key;
+};
+
 template<>
 struct RequestHandler<GroupAccounts>
 {
-    template<class T>
-    static void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
-    {
-        if (value != ""sv)
-        {
-            group.AddMember(rapidjson::StringRef(key.data(), key.size()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
-        }
-    }
-
-    template<>
-    static void add_json_document_member<std::pair<std::string_view, std::string_view>>(rapidjson::Document &document, rapidjson::Value &group,
-                                                                                        const std::pair<std::string_view, std::string_view> &key,
-                                                                                        const std::pair<std::string_view, std::string_view> &value)
-    {
-        if (value.first != ""sv)
-        {
-            group.AddMember(rapidjson::StringRef(key.first.data(), key.first.size()), rapidjson::StringRef(value.first.data(), value.first.size()), document.GetAllocator());
-        }
-        group.AddMember(rapidjson::StringRef(key.second.data(), key.second.size()), rapidjson::StringRef(value.second.data(), value.second.size()), document.GetAllocator());
-    }
-
-    template<class T>
-    class JSONResult
-    {
-    public:
-        JSONResult(std::size_t limit, const T &key)
-            : _group_array(rapidjson::kArrayType)
-            , _limit(limit)
-            , _key(key)
-        {
-            _document.SetObject();
-        }
-
-        bool is_full() const
-        {
-            return _group_array.Size() == _limit;
-        }
-
-        void add_group(const T &value, uint32_t counter)
-        {
-            rapidjson::Value group(rapidjson::kObjectType);
-            add_json_document_member(_document, group, _key, value);
-            group.AddMember("count", counter, _document.GetAllocator());
-
-            _group_array.PushBack(std::move(group), _document.GetAllocator());
-        }
-
-        const char *get_json()
-        {
-            _document.AddMember("groups", std::move(_group_array), _document.GetAllocator());
-
-            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(_buffer);
-            _document.Accept(writer);
-
-            return _buffer.GetString();
-        }
-
-    private:
-        rapidjson::Document _document;
-        rapidjson::Value _group_array;
-        rapidjson::StringBuffer _buffer;
-        std::size_t _limit;
-        T _key;
-    };
-
     static bool is_suitable_account(const GroupAccounts &request, const Account &account)
     {
         bool is_suitable = true;
