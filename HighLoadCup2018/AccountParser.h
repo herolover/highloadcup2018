@@ -142,6 +142,10 @@ public:
             _state = AccountParserState::ACCOUNT_KEY;
             break;
         case AccountParserState::SEX:
+            if (value.size() != 1)
+            {
+                return false;
+            }
             _account.sex = convert_sex(value);
             if (_account.sex == Account::Sex::INVALID)
             {

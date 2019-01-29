@@ -123,6 +123,9 @@ struct GroupAccounts
 {
     std::vector<Filter> filter;
     Filter likes_filter;
+    Filter birth_year_filter;
+    Filter joined_year_filter;
+    Filter interests_filter;
     GroupKey group_key;
     bool is_large_first;
     uint8_t limit;
@@ -349,6 +352,18 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
                             if (std::holds_alternative<f_likes>(field))
                             {
                                 group_accounts.likes_filter = group_accounts.filter.back();
+                            }
+                            else if (std::holds_alternative<f_birth>(field))
+                            {
+                                group_accounts.birth_year_filter = group_accounts.filter.back();
+                            }
+                            else if (std::holds_alternative<f_joined>(field))
+                            {
+                                group_accounts.joined_year_filter = group_accounts.filter.back();
+                            }
+                            else if (std::holds_alternative<f_interests>(field))
+                            {
+                                group_accounts.interests_filter = group_accounts.filter.back();
                             }
                         }
                         else

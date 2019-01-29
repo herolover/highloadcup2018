@@ -79,89 +79,172 @@ struct GroupCounterList
     }
 };
 
-template<class F, class T>
-void count_by_field(const Account &account, GroupCounterList<T> &group_counter)
+template<class I, class F, class T>
+struct count_by_field
 {
-}
-
-template<>
-void count_by_field<f_sex, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
-{
-    group_counter.count_key(convert_sex(account.sex));
-}
-
-template<>
-void count_by_field<f_status, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
-{
-    group_counter.count_key(convert_account_status(account.status));
-}
-
-template<>
-void count_by_field<f_city, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
-{
-    if (account.city)
+    void operator()(const I &item, GroupCounterList<T> &group_counter, std::size_t count) const
     {
-        group_counter.count_key((std::string_view)*account.city);
     }
-}
+};
+
+template<class I>
+struct count_by_field<I, f_sex, std::string_view>
+{
+    void operator()(const I &item, GroupCounterList<std::string_view> &group_counter, std::size_t count) const
+    {
+        group_counter.count_key(convert_sex(item.sex), count);
+    }
+};
+
+template<class I>
+struct count_by_field<I, f_status, std::string_view>
+{
+    void operator()(const I &item, GroupCounterList<std::string_view> &group_counter, std::size_t count)
+    {
+        group_counter.count_key(convert_account_status(item.status), count);
+    }
+};
+
+template<class I>
+struct count_by_field<I, f_city, std::string_view>
+{
+    void operator()(const I &item, GroupCounterList<std::string_view> &group_counter, std::size_t count)
+    {
+        if (item.city)
+        {
+            group_counter.count_key((std::string_view)*item.city, count);
+        }
+        else
+        {
+            group_counter.count_key(""sv, count);
+        }
+    }
+};
+
+template<class I>
+struct count_by_field<I, f_country, std::string_view>
+{
+    void operator()(const I &item, GroupCounterList<std::string_view> &group_counter, std::size_t count)
+    {
+        if (item.country)
+        {
+            group_counter.count_key((std::string_view)*item.country, count);
+        }
+        else
+        {
+            group_counter.count_key(""sv, count);
+        }
+    }
+};
 
 template<>
-void count_by_field<f_country, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+struct count_by_field<Account, f_interests, std::string_view>
 {
-    if (account.country)
+    void operator()(const Account &account, GroupCounterList<std::string_view> &group_counter, std::size_t count)
     {
-        group_counter.count_key((std::string_view)*account.country);
+        for (auto &interest : account.interest_list)
+        {
+            group_counter.count_key(interest, count);
+        }
     }
-}
+};
 
-template<>
-void count_by_field<f_interests, std::string_view>(const Account &account, GroupCounterList<std::string_view> &group_counter)
+template<class I>
+struct count_by_field<I, std::pair<f_city, f_sex>, std::pair<std::string_view, std::string_view>>
 {
-    for (auto &interest : account.interest_list)
+    void operator()(const I &item,
+                    GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter, std::size_t count)
     {
-        group_counter.count_key(interest);
+        if (item.city)
+        {
+            group_counter.count_key(std::make_pair((std::string_view)*item.city, convert_sex(item.sex)), count);
+        }
+        else
+        {
+            group_counter.count_key(std::make_pair(""sv, convert_sex(item.sex)), count);
+        }
     }
-}
+};
 
-template<>
-void count_by_field<std::pair<f_city, f_sex>, std::pair<std::string_view, std::string_view>>(const Account &account,
-                                                                                             GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+template<class I>
+struct count_by_field<I, std::pair<f_city, f_status>, std::pair<std::string_view, std::string_view>>
 {
-    if (account.city)
+    void operator()(const I &item,
+                    GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter, std::size_t count)
     {
-        group_counter.count_key(std::make_pair((std::string_view)*account.city, convert_sex(account.sex)));
+        if (item.city)
+        {
+            group_counter.count_key(std::make_pair((std::string_view)*item.city, convert_account_status(item.status)), count);
+        }
+        else
+        {
+            group_counter.count_key(std::make_pair(""sv, convert_account_status(item.status)), count);
+        }
     }
-}
+};
 
-template<>
-void count_by_field<std::pair<f_city, f_status>, std::pair<std::string_view, std::string_view>>(const Account &account,
-                                                                                                GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+template<class I>
+struct count_by_field<I, std::pair<f_country, f_sex>, std::pair<std::string_view, std::string_view>>
 {
-    if (account.city)
+    void operator()(const I &item,
+                    GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter, std::size_t count)
     {
-        group_counter.count_key(std::make_pair((std::string_view)*account.city, convert_account_status(account.status)));
+        if (item.country)
+        {
+            group_counter.count_key(std::make_pair((std::string_view)*item.country, convert_sex(item.sex)), count);
+        }
+        else
+        {
+            group_counter.count_key(std::make_pair(""sv, convert_sex(item.sex)), count);
+        }
     }
-}
+};
 
-template<>
-void count_by_field<std::pair<f_country, f_sex>, std::pair<std::string_view, std::string_view>>(const Account &account,
-                                                                                                GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+template<class I>
+struct count_by_field<I, std::pair<f_country, f_status>, std::pair<std::string_view, std::string_view>>
 {
-    if (account.country)
+    void operator()(const I &item,
+                    GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter, std::size_t count)
     {
-        group_counter.count_key(std::make_pair((std::string_view)*account.country, convert_sex(account.sex)));
+        if (item.country)
+        {
+            group_counter.count_key(std::make_pair((std::string_view)*item.country, convert_account_status(item.status)), count);
+        }
+        else
+        {
+            group_counter.count_key(std::make_pair(""sv, convert_account_status(item.status)), count);
+        }
     }
-}
+};
 
-template<>
-void count_by_field<std::pair<f_country, f_status>, std::pair<std::string_view, std::string_view>>(const Account &account,
-                                                                                                   GroupCounterList<std::pair<std::string_view, std::string_view>> &group_counter)
+struct is_suitable_group
 {
-    if (account.country)
+    bool operator()(const DB::Group &group, f_sex, const Value &value) const
     {
-        group_counter.count_key(std::make_pair((std::string_view)*account.country, convert_account_status(account.status)));
+        return group.sex == std::get<Account::Sex>(value);
     }
-}
+
+    bool operator()(const DB::Group &group, f_status, const Value &value) const
+    {
+        return group.status == std::get<Account::Status>(value);
+    }
+
+    bool operator()(const DB::Group &group, f_city, const Value &value) const
+    {
+        return group.city && group.city == std::get<std::string_view>(value);
+    }
+
+    bool operator()(const DB::Group &group, f_country, const Value &value) const
+    {
+        return group.country && group.country == std::get<std::string_view>(value);
+    }
+
+    template<class T>
+    bool operator()(const DB::Group &group, T, const Value &value) const
+    {
+        return true;
+    }
+};
 
 template<>
 struct RequestHandler<GroupAccounts>
@@ -169,7 +252,10 @@ struct RequestHandler<GroupAccounts>
     template<class T>
     static void add_json_document_member(rapidjson::Document &document, rapidjson::Value &group, const T &key, const T &value)
     {
-        group.AddMember(rapidjson::StringRef(key.data(), key.size()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
+        if (value != ""sv)
+        {
+            group.AddMember(rapidjson::StringRef(key.data(), key.size()), rapidjson::StringRef(value.data(), value.size()), document.GetAllocator());
+        }
     }
 
     template<>
@@ -177,7 +263,10 @@ struct RequestHandler<GroupAccounts>
                                                                                         const std::pair<std::string_view, std::string_view> &key,
                                                                                         const std::pair<std::string_view, std::string_view> &value)
     {
-        group.AddMember(rapidjson::StringRef(key.first.data(), key.first.size()), rapidjson::StringRef(value.first.data(), value.first.size()), document.GetAllocator());
+        if (value.first != ""sv)
+        {
+            group.AddMember(rapidjson::StringRef(key.first.data(), key.first.size()), rapidjson::StringRef(value.first.data(), value.first.size()), document.GetAllocator());
+        }
         group.AddMember(rapidjson::StringRef(key.second.data(), key.second.size()), rapidjson::StringRef(value.second.data(), value.second.size()), document.GetAllocator());
     }
 
@@ -230,14 +319,13 @@ struct RequestHandler<GroupAccounts>
         bool is_suitable = true;
         for (auto &filter : request.filter)
         {
-            bool check_result = std::visit([&account, &filter](auto &&field, auto &&method)
+            is_suitable = std::visit([&account, &filter](auto &&field, auto &&method)
             {
                 return t_check<std::decay_t<decltype(field)>, std::decay_t<decltype(method)>>()(account, filter.value);
             }, filter.field, filter.method);
 
-            if (!check_result)
+            if (!is_suitable)
             {
-                is_suitable = false;
                 break;
             }
         }
@@ -253,10 +341,7 @@ struct RequestHandler<GroupAccounts>
             using group_key_result_type = typename GroupKeyTrait<group_key_type>::type;
             GroupCounterList<group_key_result_type> group_counter;
 
-            if (request.filter.empty())
-            {
-            }
-            else if (request.likes_filter.field.index() != 0)
+            if (request.likes_filter.field.index() != 0)
             {
                 t_select<f_likes, m_eq>()(db, request.likes_filter.value, [&](auto &&range)
                 {
@@ -267,13 +352,53 @@ struct RequestHandler<GroupAccounts>
                         auto &account = begin->account();
                         if (is_suitable_account(request, account))
                         {
-                            count_by_field<group_key_type, group_key_result_type>(account, group_counter);
+                            count_by_field<Account, group_key_type, group_key_result_type>()(account, group_counter, 1);
                         }
                     }
                 });
             }
-            else
+            else if (!std::holds_alternative<f_interests>(request.group_key)
+                     && request.interests_filter.field.index() == 0)
             {
+                for (auto &group : db.group_index.group_list)
+                {
+                    bool is_suitable = true;
+                    for (auto &filter : request.filter)
+                    {
+                        is_suitable = std::visit([&group, &filter](auto &&field)
+                        {
+                            return is_suitable_group()(group, field, filter.value);
+                        }, filter.field);
+                        if (!is_suitable)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (is_suitable)
+                    {
+                        if (request.birth_year_filter.field.index() != 0)
+                        {
+                            auto count = group.birth_year_count[std::get<uint16_t>(request.birth_year_filter.value)];
+                            if (count != 0)
+                            {
+                                count_by_field<DB::Group, group_key_type, group_key_result_type>()(group, group_counter, count);
+                            }
+                        }
+                        else if (request.joined_year_filter.field.index() != 0)
+                        {
+                            auto count = group.joined_year_count[std::get<uint16_t>(request.joined_year_filter.value)];
+                            if (count != 0)
+                            {
+                                count_by_field<DB::Group, group_key_type, group_key_result_type>()(group, group_counter, count);
+                            }
+                        }
+                        else if (group.count != 0)
+                        {
+                            count_by_field<DB::Group, group_key_type, group_key_result_type>()(group, group_counter, group.count);
+                        }
+                    }
+                }
             }
 
             group_counter.sort(request.limit, request.is_large_first);
