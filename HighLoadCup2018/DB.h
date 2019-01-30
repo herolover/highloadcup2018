@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <mutex>
+#include <array>
 
 namespace mi = boost::multi_index;
 
@@ -412,19 +413,23 @@ struct DB
         return std::make_pair(it != account.end() && it->id == account_id, it);
     }
 
-    bool add_like_list(const std::vector<NewLike> &like_list)
+    template<std::size_t N>
+    bool add_like_list(const std::array<NewLike, N> &like_list, std::size_t like_list_size)
     {
         std::lock_guard lock(m);
-        for (auto &like : like_list)
+        for (std::size_t i = 0; i < like_list_size; ++i)
         {
+            auto &like = like_list[i];
             if (!has_account(like.likee_id).first || !has_account(like.liker_id).first)
             {
                 return false;
             }
         }
 
-        for (auto &like : like_list)
+        for (std::size_t i = 0; i < like_list_size; ++i)
         {
+            auto &like = like_list[i];
+
             auto liker_it = find_account(like.liker_id);
             auto likee_id = like.likee_id;
             auto like_ts = like.like_ts;

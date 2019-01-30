@@ -4,6 +4,7 @@
 
 #include <codecvt>
 #include <functional>
+#include <array>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/reader.h>
@@ -36,7 +37,7 @@ public:
         {
         case LikeParserState::KEY:
         {
-            if (value == "likes")
+            if (value == "likes"sv)
             {
                 _state = LikeParserState::LIKE_KEY;
             }
@@ -48,17 +49,17 @@ public:
         break;
         case LikeParserState::LIKE_KEY:
         {
-            const static std::map<std::string_view, LikeParserState> key_list =
+            if (value == "likee"sv)
             {
-                {"likee", LikeParserState::LIKEE_ID},
-                {"liker", LikeParserState::LIKER_ID},
-                {"ts", LikeParserState::LIKE_TS},
-            };
-
-            auto key_list_it = key_list.find(value);
-            if (key_list_it != key_list.end())
+                _state = LikeParserState::LIKEE_ID;
+            }
+            else if (value == "liker"sv)
             {
-                _state = key_list_it->second;
+                _state = LikeParserState::LIKER_ID;
+            }
+            else if (value == "ts"sv)
+            {
+                _state = LikeParserState::LIKE_TS;
             }
             else
             {
@@ -78,15 +79,15 @@ public:
         switch (_state)
         {
         case LikeParserState::LIKEE_ID:
-            _like.likee_id = value;
+            _like_list[_like_list_size].likee_id = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         case LikeParserState::LIKER_ID:
-            _like.liker_id = value;
+            _like_list[_like_list_size].liker_id = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         case LikeParserState::LIKE_TS:
-            _like.like_ts = value;
+            _like_list[_like_list_size].like_ts = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         default:
@@ -105,12 +106,11 @@ public:
     {
         if (_state == LikeParserState::LIKE_KEY)
         {
-            if (_like.likee_id == 0 || _like.liker_id == 0 || _like.like_ts == 0)
+            if (_like_list[_like_list_size].likee_id == 0 || _like_list[_like_list_size].liker_id == 0 || _like_list[_like_list_size].like_ts == 0)
             {
                 return false;
             }
-            _like_list.push_back(_like);
-            _like = {};
+            ++_like_list_size;
         }
         else if (_state != LikeParserState::KEY)
         {
@@ -139,15 +139,20 @@ public:
         }
     }
 
-    const std::vector<NewLike> &get_like_list() const
+    const std::array<NewLike, 100> &like_list() const
     {
         return _like_list;
     }
 
+    std::size_t like_list_size() const
+    {
+        return _like_list_size;
+    }
+
 private:
     LikeParserState _state = LikeParserState::KEY;
-    NewLike _like;
-    std::vector<NewLike> _like_list;
+    std::array<NewLike, 100> _like_list;
+    std::size_t _like_list_size = 0;
 };
 
 template<>
@@ -160,7 +165,7 @@ struct RequestHandler<AddLikes>
         LikeParser parser;
         rapidjson::MemoryStream stream(request.body, request.size);
         auto is_parsed = reader.Parse(stream, parser);
-        if (is_parsed && db.add_like_list(parser.get_like_list()))
+        if (is_parsed && db.add_like_list(parser.like_list(), parser.like_list_size()))
         {
             response.result(boost::beast::http::status::accepted);
             response.body() = "{}";

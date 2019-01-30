@@ -77,20 +77,20 @@ public:
         {
             const static std::map<std::string_view, AccountParserState> key_list =
             {
-                {"id", AccountParserState::ID},
+                {"birth", AccountParserState::BIRTH},
+                {"city", AccountParserState::CITY},
+                {"country", AccountParserState::COUNTRY},
                 {"email", AccountParserState::EMAIL},
                 {"fname", AccountParserState::FIRST_NAME},
-                {"sname", AccountParserState::SECOND_NAME},
-                {"phone", AccountParserState::PHONE},
-                {"sex", AccountParserState::SEX},
-                {"birth", AccountParserState::BIRTH},
-                {"country", AccountParserState::COUNTRY},
-                {"city", AccountParserState::CITY},
-                {"joined", AccountParserState::JOINED},
-                {"status", AccountParserState::STATUS},
+                {"id", AccountParserState::ID},
                 {"interests", AccountParserState::INTEREST},
-                {"premium", AccountParserState::PREMIUM_KEY},
+                {"joined", AccountParserState::JOINED},
                 {"likes", AccountParserState::LIKE_KEY},
+                {"phone", AccountParserState::PHONE},
+                {"premium", AccountParserState::PREMIUM_KEY},
+                {"sex", AccountParserState::SEX},
+                {"sname", AccountParserState::SECOND_NAME},
+                {"status", AccountParserState::STATUS},
             };
 
             auto key_list_it = key_list.find(value);
@@ -165,16 +165,13 @@ public:
             break;
         case AccountParserState::PREMIUM_KEY:
         {
-            const static std::map<std::string_view, AccountParserState> key_list =
+            if (value == "start"sv)
             {
-                {"start", AccountParserState::PREMIUM_START},
-                {"finish", AccountParserState::PREMIUM_FINISH},
-            };
-
-            auto key_list_it = key_list.find(value);
-            if (key_list_it != key_list.end())
+                _state = AccountParserState::PREMIUM_START;
+            }
+            else if (value == "finish"sv)
             {
-                _state = key_list_it->second;
+                _state = AccountParserState::PREMIUM_FINISH;
             }
             else
             {
@@ -184,16 +181,13 @@ public:
         break;
         case AccountParserState::LIKE_KEY:
         {
-            const static std::map<std::string_view, AccountParserState> key_list =
+            if (value == "id"sv)
             {
-                {"id", AccountParserState::LIKE_ID},
-                {"ts", AccountParserState::LIKE_TS},
-            };
-
-            auto key_list_it = key_list.find(value);
-            if (key_list_it != key_list.end())
+                _state = AccountParserState::LIKE_ID;
+            }
+            else if (value == "ts"sv)
             {
-                _state = key_list_it->second;
+                _state = AccountParserState::LIKE_TS;
             }
             else
             {
