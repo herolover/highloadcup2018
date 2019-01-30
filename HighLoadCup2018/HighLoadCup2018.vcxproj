@@ -175,6 +175,7 @@
     <ClInclude Include="HandlerIter.h" />
     <ClInclude Include="DB.h" />
     <ClInclude Include="AccountParser.h" />
+    <ClInclude Include="SpinLock.h" />
     <ClInclude Include="Split.h" />
     <ClInclude Include="UnionIter.h" />
     <ClInclude Include="UrlDecoding.h" />

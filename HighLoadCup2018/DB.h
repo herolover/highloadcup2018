@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SpinLock.h"
 #include "Account.h"
 #include "FieldMethod.h"
 
@@ -352,7 +353,7 @@ struct DB
         }
     };
 
-    std::mutex m;
+    spin_lock m;
     AccountIndex account;
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;

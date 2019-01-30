@@ -140,5 +140,8 @@
     <ClInclude Include="RequestHandler\AddLikes.h">
       <Filter>Header Files\RequestHandler</Filter>
     </ClInclude>
+    <ClInclude Include="SpinLock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
