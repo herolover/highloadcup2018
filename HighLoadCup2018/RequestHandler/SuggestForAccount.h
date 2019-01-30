@@ -115,9 +115,10 @@ struct RequestHandler<SuggestForAccount>
         {
             auto like_id = like_it->id;
             auto average_ts = compute_average_ts(like_it, account.like_list.end());
+            uint32_t last_account_id = 0;
             for (auto &with_account : db.liked_by[like_id])
             {
-                if (with_account.account().id == account.id)
+                if (with_account.account().id == account.id || with_account.account().id == last_account_id)
                 {
                     continue;
                 }
@@ -155,6 +156,7 @@ struct RequestHandler<SuggestForAccount>
                 {
                     similarity_list.emplace(similarity_it, with_account, similarity_value);
                 }
+                last_account_id = with_account.id();
             }
         }
 
