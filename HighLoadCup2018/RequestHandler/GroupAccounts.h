@@ -297,7 +297,7 @@ public:
     {
         _document.AddMember("groups", std::move(_group_array), _document.GetAllocator());
 
-        rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(_buffer);
+        rapidjson::Writer writer(_buffer);
         _document.Accept(writer);
 
         return _buffer.GetString();

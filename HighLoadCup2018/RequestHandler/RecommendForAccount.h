@@ -46,7 +46,7 @@ struct RequestHandler<RecommendForAccount>
         {
             _document.AddMember("accounts", std::move(_account_array), _document.GetAllocator());
 
-            rapidjson::Writer<rapidjson::StringBuffer, rapidjson::UTF8<>, rapidjson::ASCII<>> writer(_buffer);
+            rapidjson::Writer writer(_buffer);
             _document.Accept(writer);
 
             return _buffer.GetString();
