@@ -27,6 +27,13 @@
 
 namespace mi = boost::multi_index;
 
+struct NewLike
+{
+    uint32_t likee_id = 0;
+    uint32_t liker_id = 0;
+    int32_t like_ts = 0;
+};
+
 struct DB
 {
     struct email_tag {};
@@ -363,6 +370,7 @@ struct DB
     GroupIndex group_index;
 
     int32_t current_time = 0;
+    std::size_t initial_account_size = 0;
 
     std::string_view add_interest(std::string_view interest)
     {
@@ -382,6 +390,11 @@ struct DB
 
     auto find_account(uint32_t account_id)
     {
+        if (account_id <= initial_account_size)
+        {
+            return account.begin() + (account_id - 1);
+        }
+
         return std::lower_bound(account.begin(), account.end(), account_id, [](const Account &a, uint32_t account_id)
         {
             return a.id < account_id;
@@ -400,23 +413,38 @@ struct DB
         return has_account(account_id);
     }
 
-    void add_like_list(const std::vector<std::tuple<uint32_t, uint32_t, int32_t>> &like_list)
+    bool add_like_list(const std::vector<NewLike> &like_list)
     {
+        std::vector<AccountIt> liker_it_list;
+        liker_it_list.reserve(like_list.size());
+
         std::lock_guard lock(m);
         for (auto &like : like_list)
         {
-            std::apply([this](uint32_t likee_id, uint32_t liker_id, int32_t like_ts)
+            auto likee_it = has_account(like.likee_id);
+            auto liker_it = has_account(like.liker_id);
+            if (!likee_it.first || !liker_it.first)
             {
-                auto it = find_account(liker_id);
-                account.modify(it, [likee_id, like_ts](Account &a)
-                {
-                    a.add_like(likee_id, like_ts);
-                });
-                AccountReference account_reference(it);
-                auto &account_list = liked_by[likee_id];
-                account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
-            }, like);
+                return false;
+            }
+
+            liker_it_list.push_back(liker_it.second);
         }
+
+        for (std::size_t i = 0; i < like_list.size(); ++i)
+        {
+            auto likee_id = like_list[i].likee_id;
+            auto like_ts = like_list[i].like_ts;
+            account.modify(liker_it_list[i], [likee_id, like_ts](Account &a)
+            {
+                a.add_like(likee_id, like_ts);
+            });
+            AccountReference account_reference(liker_it_list[i]);
+            auto &account_list = liked_by[likee_id];
+            account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
+        }
+
+        return true;
     }
 
     bool add_account(Account &&new_account)

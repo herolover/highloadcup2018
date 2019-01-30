@@ -20,16 +20,9 @@ enum class LikeParserState
     LIKE_TS = 4
 };
 
-template<class Handler>
-class LikeParser: public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, LikeParser<Handler>>
+class LikeParser: public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, LikeParser>
 {
 public:
-    LikeParser(DB &db, Handler &&handler)
-        : _db(db)
-        , _handler(std::forward<Handler>(handler))
-    {
-    }
-
     bool Default()
     {
         return false;
@@ -85,23 +78,15 @@ public:
         switch (_state)
         {
         case LikeParserState::LIKEE_ID:
-            _likee_id = value;
-            if (!_db.has_account(_likee_id).first)
-            {
-                return false;
-            }
+            _like.likee_id = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         case LikeParserState::LIKER_ID:
-            _liker_id = value;
-            if (!_db.has_account(_liker_id).first)
-            {
-                return false;
-            }
+            _like.liker_id = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         case LikeParserState::LIKE_TS:
-            _like_ts = value;
+            _like.like_ts = value;
             _state = LikeParserState::LIKE_KEY;
             break;
         default:
@@ -120,14 +105,12 @@ public:
     {
         if (_state == LikeParserState::LIKE_KEY)
         {
-            if (_likee_id == 0 || _liker_id == 0 || _like_ts == 0)
+            if (_like.likee_id == 0 || _like.liker_id == 0 || _like.like_ts == 0)
             {
                 return false;
             }
-            _handler(_likee_id, _liker_id, _like_ts);
-            _likee_id = 0;
-            _liker_id = 0;
-            _like_ts = 0;
+            _like_list.push_back(_like);
+            _like = {};
         }
         else if (_state != LikeParserState::KEY)
         {
@@ -156,13 +139,15 @@ public:
         }
     }
 
+    const std::vector<NewLike> &get_like_list() const
+    {
+        return _like_list;
+    }
+
 private:
-    DB &_db;
-    Handler _handler;
     LikeParserState _state = LikeParserState::KEY;
-    uint32_t _likee_id = 0;
-    uint32_t _liker_id = 0;
-    int32_t _like_ts = 0;
+    NewLike _like;
+    std::vector<NewLike> _like_list;
 };
 
 template<>
@@ -172,16 +157,11 @@ struct RequestHandler<AddLikes>
     {
         thread_local rapidjson::GenericReader<rapidjson::UTF8<>, rapidjson::UTF8<>> reader;
 
-        std::vector<std::tuple<uint32_t, uint32_t, int32_t>> like_list;
-        LikeParser parser(db, [&like_list](uint32_t likee_id, uint32_t liker_id, int32_t like_ts)
-        {
-            like_list.emplace_back(likee_id, liker_id, like_ts);
-        });
+        LikeParser parser;
         rapidjson::MemoryStream stream(request.body, request.size);
         auto is_parsed = reader.Parse(stream, parser);
-        if (is_parsed)
+        if (is_parsed && db.add_like_list(parser.get_like_list()))
         {
-            db.add_like_list(like_list);
             response.result(boost::beast::http::status::accepted);
             response.body() = "{}";
         }

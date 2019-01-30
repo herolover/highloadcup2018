@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
         options_file >> db.current_time >> is_rating_data;
     }
 
-    db.account.reserve(is_rating_data == 1 ? 1'300'000 : 30'000);
+    db.initial_account_size = is_rating_data == 1 ? 1'300'000 : 30'000;
+    db.account.reserve(db.initial_account_size);
 
     for (int i = 1; i <= (is_rating_data == 1 ? 130 : 3); ++i)
     {
