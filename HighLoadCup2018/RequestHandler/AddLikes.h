@@ -139,7 +139,7 @@ public:
         }
     }
 
-    const std::array<NewLike, 100> &like_list() const
+    const auto &like_list() const
     {
         return _like_list;
     }
@@ -151,7 +151,7 @@ public:
 
 private:
     LikeParserState _state = LikeParserState::KEY;
-    std::array<NewLike, 100> _like_list;
+    std::array<NewLike, 150> _like_list;
     std::size_t _like_list_size = 0;
 };
 

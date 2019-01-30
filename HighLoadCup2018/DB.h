@@ -361,7 +361,7 @@ struct DB
         }
     };
 
-    spin_lock m;
+    std::mutex m;
     AccountIndex account;
     std::vector<Account::first_name_t> male_first_name;
     std::vector<Account::first_name_t> female_first_name;
@@ -369,6 +369,7 @@ struct DB
     std::map<std::string_view, InterestIndex> interest_account_list;
     std::map<uint32_t, std::vector<AccountReference>> liked_by;
     GroupIndex group_index;
+    std::map<std::string_view, GroupIndex> interest_group_index;
 
     int32_t current_time = 0;
     std::size_t initial_account_size = 0;
@@ -485,6 +486,8 @@ struct DB
             {
                 auto &account_list = interest_account_list[account_interest];
                 account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
+
+                interest_group_index[account_interest].add_account(account_reference.account());
             }
 
             for (auto &like : account_reference.account().like_list)
@@ -534,6 +537,10 @@ struct DB
         account.modify(account_it, [this, update_account = std::move(update_account), account_it](Account &a) mutable
         {
             group_index.remove_account(a);
+            for (auto &account_interest : a.interest_list)
+            {
+                interest_group_index[account_interest].remove_account(a);
+            }
 
             if (!update_account.email.empty())
             {
@@ -553,6 +560,7 @@ struct DB
                 a.phone = std::move(update_account.phone);
                 a.phone_code = std::move(update_account.phone_code);
             }
+
             if (update_account.sex != Account::Sex::INVALID)
             {
                 a.sex = update_account.sex;
@@ -621,6 +629,7 @@ struct DB
                     account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
                 }
             }
+
             if (!update_account.like_list.empty())
             {
                 AccountReference account_reference(account_it);
@@ -640,6 +649,10 @@ struct DB
             }
 
             group_index.add_account(a);
+            for (auto &account_interest : a.interest_list)
+            {
+                interest_group_index[account_interest].add_account(a);
+            }
         });
 
         return UpdateAccountResult::SUCCESS;

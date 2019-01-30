@@ -347,20 +347,27 @@ struct RequestHandler<GroupAccounts>
                 {
                     auto begin = range.first;
                     auto end = range.second;
+                    uint32_t last_account_id = 0;
                     for (; begin != end; ++begin)
                     {
                         auto &account = begin->account();
+                        if (account.id == last_account_id)
+                        {
+                            continue;
+                        }
+
                         if (is_suitable_account(request, account))
                         {
                             count_by_field<Account, group_key_type, group_key_result_type>()(account, group_counter, 1);
+                            last_account_id = account.id;
                         }
                     }
                 });
             }
-            else if (!std::holds_alternative<f_interests>(request.group_key)
-                     && request.interests_filter.field.index() == 0)
+            else if (!std::holds_alternative<f_interests>(request.group_key))
             {
-                for (auto &group : db.group_index.group_list)
+                auto &group_list = request.interests_filter.field.index() != 0 ? db.interest_group_index[std::get<std::pair<std::string_view, Account::interest_mask_t>>(request.interests_filter.value).first].group_list : db.group_index.group_list;
+                for (auto &group : group_list)
                 {
                     bool is_suitable = true;
                     for (auto &filter : request.filter)
@@ -396,6 +403,58 @@ struct RequestHandler<GroupAccounts>
                         else if (group.count != 0)
                         {
                             count_by_field<DB::Group, group_key_type, group_key_result_type>()(group, group_counter, group.count);
+                        }
+                    }
+                }
+            }
+            else if constexpr(std::is_same_v<f_interests, group_key_type> &&std::is_same_v<std::string_view, group_key_result_type>)
+            {
+                for (auto &interest : db.interest_group_index)
+                {
+                    if (request.filter.empty())
+                    {
+                        group_counter.count_key(interest.first, db.interest_account_list[interest.first].size());
+                    }
+                    else
+                    {
+                        for (auto &group : interest.second.group_list)
+                        {
+                            bool is_suitable = true;
+                            for (auto &filter : request.filter)
+                            {
+                                is_suitable = std::visit([&group, &filter](auto &&field)
+                                {
+                                    return is_suitable_group()(group, field, filter.value);
+                                }, filter.field);
+                                if (!is_suitable)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (is_suitable)
+                            {
+                                if (request.birth_year_filter.field.index() != 0)
+                                {
+                                    auto count = group.birth_year_count[std::get<uint16_t>(request.birth_year_filter.value)];
+                                    if (count != 0)
+                                    {
+                                        group_counter.count_key(interest.first, count);
+                                    }
+                                }
+                                else if (request.joined_year_filter.field.index() != 0)
+                                {
+                                    auto count = group.joined_year_count[std::get<uint16_t>(request.joined_year_filter.value)];
+                                    if (count != 0)
+                                    {
+                                        group_counter.count_key(interest.first, count);
+                                    }
+                                }
+                                else if (group.count != 0)
+                                {
+                                    group_counter.count_key(interest.first, group.count);
+                                }
+                            }
                         }
                     }
                 }
