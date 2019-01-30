@@ -25,15 +25,10 @@ struct RequestHandler<AddAccount>
                 account.interest_mask = db.get_interest_mask(account.interest_list);
                 is_valid = db.add_account(std::move(account));
             }
-        }, AccountParserState::ACCOUNT_KEY, true);
+        }, AccountParserState::ACCOUNT_KEY);
 
-        parser.reset(AccountParserState::ACCOUNT_KEY);
         rapidjson::MemoryStream stream(request.body, request.size);
         auto is_parsed = reader.Parse(stream, parser);
-        if (!is_parsed)
-        {
-            parser.reset(AccountParserState::ACCOUNT_KEY);
-        }
         if (is_parsed && is_valid)
         {
             response.result(boost::beast::http::status::created);

@@ -388,9 +388,14 @@ struct DB
         return std::string_view((*it)->data(), (*it)->size());
     }
 
+    bool is_initial_account(uint32_t account_id)
+    {
+        return account_id <= initial_account_size;
+    }
+
     auto find_account(uint32_t account_id)
     {
-        if (account_id <= initial_account_size)
+        if (is_initial_account(account_id))
         {
             return account.begin() + (account_id - 1);
         }
@@ -407,39 +412,27 @@ struct DB
         return std::make_pair(it != account.end() && it->id == account_id, it);
     }
 
-    std::pair<bool, AccountIt> has_account_with_lock(uint32_t account_id)
-    {
-        std::lock_guard lock(m);
-        return has_account(account_id);
-    }
-
     bool add_like_list(const std::vector<NewLike> &like_list)
     {
-        std::vector<AccountIt> liker_it_list;
-        liker_it_list.reserve(like_list.size());
-
         std::lock_guard lock(m);
         for (auto &like : like_list)
         {
-            auto likee_it = has_account(like.likee_id);
-            auto liker_it = has_account(like.liker_id);
-            if (!likee_it.first || !liker_it.first)
+            if (!has_account(like.likee_id).first || !has_account(like.liker_id).first)
             {
                 return false;
             }
-
-            liker_it_list.push_back(liker_it.second);
         }
 
-        for (std::size_t i = 0; i < like_list.size(); ++i)
+        for (auto &like : like_list)
         {
-            auto likee_id = like_list[i].likee_id;
-            auto like_ts = like_list[i].like_ts;
-            account.modify(liker_it_list[i], [likee_id, like_ts](Account &a)
+            auto liker_it = find_account(like.liker_id);
+            auto likee_id = like.likee_id;
+            auto like_ts = like.like_ts;
+            account.modify(liker_it, [likee_id, like_ts](Account &a)
             {
                 a.add_like(likee_id, like_ts);
             });
-            AccountReference account_reference(liker_it_list[i]);
+            AccountReference account_reference(liker_it);
             auto &account_list = liked_by[likee_id];
             account_list.insert(std::upper_bound(account_list.begin(), account_list.end(), account_reference), account_reference);
         }
@@ -447,12 +440,22 @@ struct DB
         return true;
     }
 
-    bool add_account(Account &&new_account)
+    bool add_account(Account &&new_account, bool check_likes = true)
     {
         std::lock_guard lock(m);
         if (!new_account.phone.empty() && account.get<phone_tag>().find(new_account.phone) != account.get<phone_tag>().end())
         {
             return false;
+        }
+        if (check_likes)
+        {
+            for (auto &like : new_account.like_list)
+            {
+                if (!has_account(like.id).first)
+                {
+                    return false;
+                }
+            }
         }
 
         auto result = account.insert(std::upper_bound(account.begin(), account.end(), new_account.id, [](uint32_t account_id, const Account &a)
@@ -491,19 +494,39 @@ struct DB
         return result.second;
     }
 
-    bool update_account(AccountIt account_it, Account &&update_account)
+    enum class UpdateAccountResult
+    {
+        SUCCESS,
+        INVALID_ACCOUNT_DATA,
+        ACCOUNT_NOT_FOUND
+    };
+
+    UpdateAccountResult update_account(Account &&update_account)
     {
         std::lock_guard lock(m);
+        auto account_result = has_account(update_account.id);
+        if (!account_result.first)
+        {
+            return UpdateAccountResult::ACCOUNT_NOT_FOUND;
+        }
         if (!update_account.email.empty() && account.get<email_tag>().find(update_account.email) != account.get<email_tag>().end())
         {
-            return false;
+            return UpdateAccountResult::INVALID_ACCOUNT_DATA;
         }
         if (!update_account.phone.empty() && account.get<phone_tag>().find(update_account.phone) != account.get<phone_tag>().end())
         {
-            return false;
+            return UpdateAccountResult::INVALID_ACCOUNT_DATA;
+        }
+        for (auto &like : update_account.like_list)
+        {
+            if (!has_account(like.id).first)
+            {
+                return UpdateAccountResult::INVALID_ACCOUNT_DATA;
+            }
         }
 
-        auto result = account.modify(account_it, [this, update_account = std::move(update_account), account_it](Account &a) mutable
+        auto account_it = account_result.second;
+        account.modify(account_it, [this, update_account = std::move(update_account), account_it](Account &a) mutable
         {
             group_index.remove_account(a);
 
@@ -614,7 +637,7 @@ struct DB
             group_index.add_account(a);
         });
 
-        return result;
+        return UpdateAccountResult::SUCCESS;
     }
 
     Account::interest_mask_t get_interest_mask(std::string_view interest)

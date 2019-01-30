@@ -14,29 +14,28 @@ struct RequestHandler<UpdateAccount>
     {
         thread_local rj::GenericReader<rj::UTF8<>, rj::UTF8<>> reader;
 
-        bool is_valid = false;
-        AccountParser parser(db, [&db, &is_valid, &request](Account &&account)
+        DB::UpdateAccountResult result;
+        AccountParser parser(db, [&db, &result, &request](Account &&account)
         {
-            account.id = request.account_it->id;
+            account.id = request.account_id;
             account.interest_mask = db.get_interest_mask(account.interest_list);
-            is_valid = db.update_account(request.account_it, std::move(account));
-        }, AccountParserState::ACCOUNT_KEY, true);
+            result = db.update_account(std::move(account));
+        }, AccountParserState::ACCOUNT_KEY);
 
-        parser.reset(AccountParserState::ACCOUNT_KEY);
         rapidjson::MemoryStream stream(request.body, request.size);
         auto is_parsed = reader.Parse(stream, parser);
-        if (!is_parsed)
-        {
-            parser.reset(AccountParserState::ACCOUNT_KEY);
-        }
-        if (is_parsed && is_valid)
+        if (is_parsed && result == DB::UpdateAccountResult::SUCCESS)
         {
             response.result(boost::beast::http::status::accepted);
             response.body() = "{}";
         }
-        else
+        else if (!is_parsed || result == DB::UpdateAccountResult::INVALID_ACCOUNT_DATA)
         {
             response.result(boost::beast::http::status::bad_request);
+        }
+        else
+        {
+            response.result(boost::beast::http::status::not_found);
         }
         response.prepare_payload();
     }

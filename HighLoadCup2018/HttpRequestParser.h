@@ -156,7 +156,7 @@ struct AddAccount
 
 struct UpdateAccount
 {
-    DB::AccountIt account_it;
+    uint32_t account_id;
     const char *body;
     std::size_t size;
 };
@@ -396,19 +396,13 @@ inline ParsedRequest parse_http_request(DB &db, const boost::beast::http::reques
             else
             {
                 UpdateAccount update_account;
-                uint32_t account_id = 0;
-                auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), account_id);
+                auto[p, ec] = std::from_chars(target_parts[1].data(), target_parts[1].data() + target_parts[1].size(), update_account.account_id);
 
-                bool has_account = false;
                 if (ec == std::errc())
                 {
-                    std::tie(has_account, update_account.account_it) = db.has_account_with_lock(account_id);
-                    if (has_account)
-                    {
-                        update_account.body = request.body().data();
-                        update_account.size = request.body().size();
-                        result = std::move(update_account);
-                    }
+                    update_account.body = request.body().data();
+                    update_account.size = request.body().size();
+                    result = std::move(update_account);
                 }
                 else
                 {

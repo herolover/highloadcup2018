@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     DB db;
     AccountParser parser(db, [&db](Account &&account)
     {
-        db.add_account(std::move(account));
+        db.add_account(std::move(account), false);
     });
 
     std::string data_path(argv[1]);

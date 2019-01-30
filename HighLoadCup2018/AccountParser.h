@@ -43,20 +43,11 @@ template<class Handler>
 class AccountParser: public rj::BaseReaderHandler<rj::UTF8<>, AccountParser<Handler>>
 {
 public:
-    AccountParser(DB &db, Handler &&handler, AccountParserState state = AccountParserState::KEY, bool check_likes = false)
+    AccountParser(DB &db, Handler &&handler, AccountParserState state = AccountParserState::KEY)
         : _db(db)
         , _handler(std::forward<Handler>(handler))
         , _state(state)
-        , _check_likes(check_likes)
     {
-    }
-
-    void reset(AccountParserState state)
-    {
-        _state = state;
-        _account = {};
-        _like_id = 0;
-        _like_ts = 0;
     }
 
     bool Default()
@@ -261,10 +252,6 @@ public:
             break;
         case AccountParserState::LIKE_ID:
             _like_id = value;
-            if (_check_likes && !_db.has_account(_like_id).first)
-            {
-                return false;
-            }
             _state = AccountParserState::LIKE_KEY;
             break;
         case AccountParserState::LIKE_TS:
@@ -346,7 +333,6 @@ private:
     DB &_db;
     Handler _handler;
     AccountParserState _state = AccountParserState::KEY;
-    bool _check_likes;
     Account _account;
     uint32_t _like_id = 0;
     int32_t _like_ts = 0;
